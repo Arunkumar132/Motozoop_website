@@ -85,8 +85,7 @@ $ firebase deploy
 
 ---
 
-## 📸 Screenshots (Optional)
-_Add demo images here._
+## 📸 Screenshots
 
 ---
 
