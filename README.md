@@ -18,7 +18,7 @@ Built using Google Cloud's **Vertex AI**, **Gemini**, **Firebase**, and **Agri A
 - Fetches mandi rates for user’s location
 - Uses Gemini to analyze price trends and selling suggestions
 
-### 3. 🏛️ Government Scheme Navigator
+### 3. 🏛️ Government Scheme Navigator 1
 - Farmers can ask about irrigation subsidies, loans, etc.
 - Gemini interprets government documents and simplifies response
 
