@@ -4,11 +4,17 @@ import FooterTop from "./FooterTop";
 
 const Footer = () => {
   return (
-  <footer className="bg-white broder-t">
-    <Container>
-      <FooterTop />
-    </Container> 
-  </footer>
+    <footer className="bg-white border-t">
+      <Container>
+        <FooterTop />
+        <div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </Container> 
+    </footer>
   );
 };
 
