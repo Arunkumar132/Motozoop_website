@@ -14,16 +14,11 @@ const Header = async () => {
   return (
     <header className="bg-white py-5">
       <Container className="flex items-center justify-between text-lightColor">
-        {/* Left Side */}
         <div className="w-auto md:w-1/3 flex items-center gap-2.5 justify-start md:gap-0">
           <MobileMenu />
           <Logo />
         </div>
-
-        {/* Center Menu */}
         <HeaderMenu />
-
-        {/* Right Side */}
         <div className="w-auto md:w-1/3 flex items-center justify-end gap-5">
           <SearchBar />
           <Carticon />
