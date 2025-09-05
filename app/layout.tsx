@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import {ClerkProvider} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: {
     default: "Shopping car accessories",
     template: "%s | MotoZoop",
   },
-  description: "IT is a website for car accessories, your one-stop shop for all things automotive.",
+  description:
+    "IT is a website for car accessories, your one-stop shop for all things automotive.",
 };
 
 export default function RootLayout({
@@ -19,13 +20,13 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body className="font-poppins antialiased">
-        <Header />
-          {children}
-        <Footer />
-      </body>
-    </html>
+      <html lang="en">
+        <body className="font-poppins antialiased min-h-screen flex flex-col">
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
