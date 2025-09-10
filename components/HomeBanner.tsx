@@ -1,13 +1,13 @@
 import React from 'react';
 import { Title } from "@/components/Title";
-import Link from "next/link"; // ✅ correct import
+import Link from "next/link";
 import Image from 'next/image';
 import { banner_1 } from '@/images';
 
 const HomeBanner = () => {
   return (
-    <div className="py-16 md:py-0 bg-shop_light_pink rounded-lg px-10 lg:px-24 flex items-center justify-between">
-      <div className='space-y-5'>
+    <div className="py-16 md:py-0 bg-shop_light_pink rounded-lg px-10 lg:px-24 flex flex-col md:flex-row items-center justify-between">
+      <div className="space-y-5 text-center md:text-left">
         <Title>
           Grab Upto 50% Off On <br />
           Car Accessories!
@@ -19,8 +19,14 @@ const HomeBanner = () => {
           Buy Now
         </Link>
       </div>
-      <div>
-        <Image src={banner_1} alt="banner_1" className="hidden md:inline-flex w-96" />
+      <div className="hidden md:inline-flex">
+        <Image 
+          src={banner_1} 
+          alt="Car accessories sale banner" 
+          width={400} 
+          height={300} 
+          priority
+        />
       </div>
     </div>
   );

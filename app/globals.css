@@ -57,6 +57,7 @@
 }
 
 :root {
+  --font-poppins:"Poppins", sans-serif;
   --radius:0.625rem;
   --background:oklch(1 0 0);
   --foreground:oklch(0.145 0 0);
@@ -140,4 +141,8 @@
     @apply transition-all duration-300 ease-in-out;
   }
 
+}
+
+body {
+  font-family: var(--font-poppins);
 }
