@@ -107,7 +107,7 @@ export const productType = defineType({
             const image = Array.isArray(media) && media.length > 0 ? media[0] : undefined;
             return {
                 title: title,
-                subtitle: subtitle !== undefined ? `$${subtitle}` : "",
+                subtitle: subtitle !== undefined ? `₹${subtitle}` : "",
                 media: image,
             };
         },

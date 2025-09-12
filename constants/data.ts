@@ -21,3 +21,10 @@ export const categoriesData = [
     { title: "Interior", href: "interior" },
     { title: "Detailing", href: "detailing" },
 ];
+
+export const productType = [
+    { title: "Dashboard", value: "dashboard_accesories" },
+    { title: "Interior", value: "interior_accesories" },
+    { title: "Exterior", value: "exterior_accesories" },
+    { title: "Detailing", value: "detailing_accesories" },
+];

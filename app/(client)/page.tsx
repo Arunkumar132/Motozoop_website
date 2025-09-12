@@ -1,14 +1,18 @@
 import Container from "@/components/Container";
 import HomeBanner from "@/components/HomeBanner";
-import { Button } from "@/components/ui/button";
+import ProductGrid from "@/components/ProductGrid";
 import React from "react";
 
-const Home=()=>{ 
+const Home = () => {
   return (
-
-  <Container className="bg-shop-light-pink">
-    <HomeBanner />
-  </Container>
+    <Container>
+      <div className="bg-shop-light-pink rounded-lg">
+        <HomeBanner />
+      </div>
+      <div className="py-10">
+        <ProductGrid />
+      </div>
+    </Container>
   );
 };
 
