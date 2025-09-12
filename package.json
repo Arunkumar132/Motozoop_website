@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typegen":"npx sanity@latest schema extract && npx sanity@latest typegen generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
@@ -22,17 +23,18 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sanity/image-url": "^1.2.0",
-    "@sanity/vision": "^4.7.0",
+    "@sanity/vision": "^4.8.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.542.0",
+    "motion": "^12.23.12",
     "next": "15.5.2",
-    "next-sanity": "^10.1.3",
+    "next-sanity": "^10.1.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "sanity": "^4.7.0",
+    "sanity": "^4.8.1",
     "styled-components": "^6.1.19",
     "tailwind-merge": "^3.3.1"
   },

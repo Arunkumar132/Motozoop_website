@@ -17,9 +17,12 @@ export const quickLinksData = [
 ];
 
 export const categoriesData = [
-    { title: "Exterior", href: "exterior" },
-    { title: "Interior", href: "interior" },
-    { title: "Detailing", href: "detailing" },
+    { title: "Car Covers", href: "car_covers" },
+    { title: "Spoilers", href: "spoilers" },
+    { title: "Seat Covers", href: "seat_covers" },
+    { title: "Steering Wheel", href: "steering_wheel" },
+    { title: "GPS", href: "gps" },
+    { title: "Dash Camera", href: "dash_cams" },
 ];
 
 export const productType = [

@@ -20,5 +20,5 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     blogType,
     authorType,
     addressType,
-  ],
+  ],
 }
