@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import HomeTabBar from './HomeTabBar'; // ✅ Correct import
+import HomeTabBar from './HomeTabBar'; 
 
 const ProductGrid = () => {
     const [products, setProducts] = useState([]);
