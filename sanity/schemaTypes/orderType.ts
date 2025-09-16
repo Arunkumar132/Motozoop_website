@@ -146,6 +146,8 @@ export const orderType = defineType({
                     { title: "Pending", value: "pending" },
                     { title: "Processing", value: "processing" },
                     { title: "Paid", value: "paid" },
+                    { title: "Order_confirmed", value: "order_confirmed" },
+                    { title: "Packing", value: "packing" },
                     { title: "Shipped", value: "shipped" },
                     { title: "Out for Delivery", value: "out_for_delivery" },
                     { title: "Delivered", value: "delivered" },

@@ -45,19 +45,6 @@ export const categoryType = defineType({
         hotspot: true,
       },
     }),
-    defineField({
-      name: "statueType",
-      title: "Type of Statue",
-      type: "string",
-      options: {
-        list: [
-          { title: "Vinayagar", value: "vinayagar" },
-          { title: "Lakshmi", value: "lakshmi" },
-          { title: "Saraswathi", value: "saraswathi" },
-          { title: "Perumal", value: "perumal" },
-        ],
-      },
-    }),
   ],
   preview: {
     select: {

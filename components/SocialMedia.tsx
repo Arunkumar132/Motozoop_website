@@ -29,7 +29,7 @@ const socialLinks = [
   },
   {
     title: "Instagram",
-    href: "https://www.instagram.com/motozoop/",
+    href: "https://www.instagram.com/motozoop_cartown_dharapuram/",
     icon: <Instagram className="w-5 h-5" />,
   },
   {
