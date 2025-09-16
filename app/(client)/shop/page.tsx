@@ -1,6 +1,5 @@
 "use client"
 
-
 import React from 'react'
 import { client } from '@/sanity/lib/client'
 
@@ -21,7 +20,7 @@ export default function ShopPage() {
       <h1>ShopPage</h1>
       {products.length === 0 ? (
         <p>No products found</p>
-      ) : (
+      ) : ( 
         <div>
           {products.map((product) => (
             <div key={product._id}>

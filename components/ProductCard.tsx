@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import AddToWishListButton from "./AddToWishListButton";
-import Title from "./ui/text";
+import { Title } from "./Title";
 
 const ProductCard = ({product}:{ product: Product }) => {
     return <div className="text-sm border-{1px} border-dark_blue/20 rounded-md bg-white group">
