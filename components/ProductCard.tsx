@@ -1,6 +1,6 @@
 import { Product } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
-import { Flame} from "lucide-react";
+import { Flame, StarIcon} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
@@ -42,6 +42,14 @@ const ProductCard = ({product}:{ product: Product }) => {
             <p className="uppercase line-clamp-1 text-xs text-shop_light_text">{product?.categories?.map((cat)=>cat).join(", ")}</p>}
 
             <Title  className='text-sm line-clamp-1'>{product?.name}</Title>
+            <div>
+                <div classname = 'flex items-center'>
+                    {[...Array(5)].map((_,index) => (
+                        <StarIcon key={index} className={index = 4 ? 'text-shop_lighter_green':'text-shop_light_text'}
+                        fill={index < 4 ? '#93D991':'#ababab'}/>
+                    ))}
+                </div>
+            </div>
         </div>
     </div>
 };
