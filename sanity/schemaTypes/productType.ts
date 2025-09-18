@@ -98,6 +98,8 @@ export const productType = defineType({
                     { title: "Interior", value: "interior" },
                     { title: "Exterior", value: "exterior" },
                     { title: "Detailing", value: "detailing" },
+                    { title: "Car Care Products", value: "car_care_products" },
+                    { title: "Dashboard", value: "dashboard_accesories" },
                 ],
             },
         }),

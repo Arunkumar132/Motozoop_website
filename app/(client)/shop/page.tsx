@@ -4,8 +4,17 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { client } from "@/sanity/lib/client";
 import { Product } from "@/sanity/types";
+import HomeBanner from "@/components/HomeBanner"; // Banner
 import { cn } from "@/lib/utils";
 
+// Example categories (replace with dynamic if needed)
+const categories = [
+  "Dashboard",
+  "Interior",
+  "Exterior",
+  "Detailing",
+  "Car Care Products",
+];
 
 const ShopPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,13 +54,46 @@ const ShopPage = () => {
     );
 
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-5">ShopPage</h1>
+    <div className="px-6 md:px-12 lg:px-20">
+      {/* Banner */}
+      <div className="bg-shop-light-pink rounded-lg mb-8">
+        <HomeBanner />
+      </div>
 
+      {/* Categories */}
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex gap-5 flex-wrap">
+          {categories.map((cat, index) => (
+            <button
+              key={index}
+              className={cn(
+                "px-5 py-2 rounded-full text-sm font-semibold shadow-sm",
+                index === 0
+                  ? "bg-green-600 text-white"
+                  : "bg-green-50 text-black"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm font-medium cursor-pointer">See all</span>
+      </div>
+
+      {/* Products */}
       {products.length === 0 ? (
-        <p>No products found</p>
+        <div className="text-center py-20 bg-gray-50 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">No Product Available</h2>
+          <p className="text-gray-600">
+            We&apos;re sorry, but there are no products available at the moment.
+          </p>
+          <p className="text-green-600 mt-2">We&apos;re restocking shortly</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Please check back later or explore other categories
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-10">
           {products.map((product) => {
             const imageUrl = product.images?.[0]?.asset?.url;
 
