@@ -2,7 +2,7 @@ import { sanityFetch } from "../lib/live";
 
 const getCategories = async (quantity?: number) => {
     try{
-        const query = quanity
+        const query = quantity
             ? `*[_typr =='category] | order(name asc) [0...$quantity] {
                 ...,
                 'productCount': count(*[_type == 'product' && references(^._is)])
