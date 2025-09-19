@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { client } from "@/sanity/lib/client";
-import { Product } from "@/sanity/types";
 import HomeBanner from "@/components/HomeBanner"; // Banner
 import { cn } from "@/lib/utils";
+import { Product } from "@/sanity.types";
 
 // Example categories (replace with dynamic if needed)
 const categories = [

@@ -3,7 +3,7 @@ import "../globals.css";
 import Footer from "@/components/Footer";
 
 import { ClerkProvider } from "@clerk/nextjs";
-import Header from "@/components/Header";
+import Header from "@/components/header";
 
 export const metadata: Metadata = {
   title: {
