@@ -29,10 +29,9 @@ const Header = async () => {
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             <SignedOut>
+              {/* No extra <button>, directly provide text or your styled component */}
               <SignInButton mode="modal">
-                <button >
-                  Login
-                </button>
+                Login
               </SignInButton>
             </SignedOut>
           </ClerkLoaded>
