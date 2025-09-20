@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Title } from "./Title";
 import { Category } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
+import { Title } from "./Title";
 
 const HomeCategories = ({ categories }: { categories: Category[] }) => {
   return (
@@ -20,11 +20,11 @@ const HomeCategories = ({ categories }: { categories: Category[] }) => {
             {category?.image && (
               <div className="overflow-hidden border border-shop_orange/30 group-hover:border-shop_orange hoverEffect w-20 h-20 p-1 rounded-md">
                 <Image
-                  src={urlFor(category?.image)?.url() || "/placeholder.png"}
+                  src={category?.image ? urlFor(category.image).url() : "/placeholder.png"}
                   alt={category?.title || "Category"}
                   width={80}
                   height={80}
-                  className="w-full h-full object-contain group-hover:scale-110 hoverEffect"
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
             )}
