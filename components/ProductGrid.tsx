@@ -11,21 +11,23 @@ import ProductCard from "./ProductCard";
 import { Product } from "@/sanity.types";
 
 const ProductGrid = () => {
+  // ✅ default = first item in productType, fallback to "all"
+  const [selectedTab, setSelectedTab] = useState<string>(
+    productType[1]?.value || "all"
+  );
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<string>(
-    productType[0]?.value || "all"
-  );
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
 
-      // Define query and params inside useEffect to satisfy ESLint
       const query = `*[_type == 'product' && varient == $variant] | order(name desc) {
         ...,
         "categories": categories[]->title
       }`;
+
       const params = { variant: selectedTab?.toLowerCase() || "all" };
 
       try {

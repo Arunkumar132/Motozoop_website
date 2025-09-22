@@ -26,8 +26,8 @@ export const categoriesData = [
 
 export const productType = [
     { title: "Dashboard", value: "dashboard-accessories" },
-    { title: "Interior", value: "interior_accesories" },
-    { title: "Exterior", value: "exterior_accesories" },
-    { title: "Detailing", value: "detailing_accesories" },
+    { title: "Interior", value: "interior" },
+    { title: "Exterior", value: "exterior"},
+    { title: "Detailing", value: "detailing" },
     { title: "Car Care Products", href: "car_care_product" },
 ];
