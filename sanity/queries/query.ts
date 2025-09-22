@@ -16,4 +16,9 @@ const DEAL_PRODUCTS = defineQuery(
   }`
 );
 
-export { LATEST_BLOG_QUERY, DEAL_PRODUCTS };
+const PRODUCTS_BY_SLUG_QUERY = defineQuery(
+  `*[_type == 'product' && slug.current == $slug] | order(name asc) [0]`
+);
+
+
+export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY };

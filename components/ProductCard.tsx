@@ -18,7 +18,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       {/* Image and badges */}
       <div className="relative">
         {/* Product Image Link */}
-        <Link href={`/product/${productSlug}`} className="block">
+        <Link href={`/product/${product?.slug?.current}`} className="block">
           {product?.images && (
             <Image
               src={urlFor(product?.images[0]).url()}
