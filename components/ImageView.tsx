@@ -19,7 +19,7 @@ interface Props {
     _type: "image";
     _key: string;
   }>
-  isStock?: number;
+  isStock?: number | undefined;
 }
 
 const ImageView = ({images=[],isStock}: Props) => {
@@ -46,9 +46,12 @@ const ImageView = ({images=[],isStock}: Props) => {
           />
         </motion.div>
       </AnimatePresence>
-      <div>
+      <div className="grid grid-cols-6 gap-2 h-20 md:h-24">
         {images?.map((image)=>(
-          <button key={image?._key}>
+          <button key={image?._key}
+          onClick={()=> setActive(image)}
+          className={`border ${active?._key === image?._key ? 'border-darkColor opacity-100' : 'opacity-50'}`}
+          >
             <Image 
               src={urlFor(image).url()}
               alt={'THumbnail ${image._key}'}
