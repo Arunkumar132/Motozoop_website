@@ -1143,6 +1143,14 @@
             },
             {
               "type": "string",
+              "value": "order_confirmed"
+            },
+            {
+              "type": "string",
+              "value": "packing"
+            },
+            {
+              "type": "string",
               "value": "shipped"
             },
             {
@@ -1433,6 +1441,10 @@
           "of": [
             {
               "type": "string",
+              "value": "dashboard_accesories"
+            },
+            {
+              "type": "string",
               "value": "interior"
             },
             {
@@ -1442,6 +1454,10 @@
             {
               "type": "string",
               "value": "detailing"
+            },
+            {
+              "type": "string",
+              "value": "car_care_products"
             }
           ]
         },
@@ -1976,31 +1992,6 @@
               }
             }
           }
-        },
-        "optional": true
-      },
-      "statueType": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "union",
-          "of": [
-            {
-              "type": "string",
-              "value": "vinayagar"
-            },
-            {
-              "type": "string",
-              "value": "lakshmi"
-            },
-            {
-              "type": "string",
-              "value": "saraswathi"
-            },
-            {
-              "type": "string",
-              "value": "perumal"
-            }
-          ]
         },
         "optional": true
       }

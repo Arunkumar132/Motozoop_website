@@ -17,17 +17,17 @@ export const quickLinksData = [
 ];
 
 export const categoriesData = [
-    { title: "Car Care Products", href: "car_care_products" },
-    { title: "Interiors", href: "exteriors" },
-    { title: "Exteriors", href: "interiors" },
-    { title: "Detailing", href: "detailing" },
-    { title: "Dashboard Accessories", href: "dashboard_accesories" },
+    { title: "Interiors", href: "interior" },
+    { title: "Exteriors", href: "exterior" },
+    { title: "Car Care Products", href: "car-care-product" },
+    { title: "Detailing Products", href: "detailing" },
+    { title: "Dashboard Accessories", href: "dashboard-accesories" },
 ];
 
 export const productType = [
-    { title: "Dashboard", value: "dashboard_accesories" },
+    { title: "Dashboard", value: "dashboard-accessories" },
     { title: "Interior", value: "interior_accesories" },
     { title: "Exterior", value: "exterior_accesories" },
     { title: "Detailing", value: "detailing_accesories" },
-    { title: "Car Care Products", href: "car_care_products" },
+    { title: "Car Care Products", href: "car_care_product" },
 ];

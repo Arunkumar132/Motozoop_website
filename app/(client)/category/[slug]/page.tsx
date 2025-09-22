@@ -20,7 +20,7 @@ const CategoryPage = async({
                         {slug && slug}
                     </span>
                 </Title>
-                <CategoryProducts />
+                <CategoryProducts categories={categories} slug={slug} />
             </Container>
         </div>
     )
