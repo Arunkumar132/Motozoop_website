@@ -3,20 +3,24 @@ import ImageView from "@/components/ImageView";
 import { getProductBySlug } from "@/sanity/queries";
 import React from "react";
 
-const SingleProductImage = async({
-    params,
+const SingleProductPage = async ({
+  params,
 }: {
-    params: Promise<{slug: string}>;
+  params: { slug: string };
 }) => {
+  const { slug } = params;
+  const product = await getProductBySlug(slug);
+  const isStock = product?.stock > 0;
 
-    const { slug } = await params;
-    const product = await getProductBySlug(slug);
-    return(
-        <Container>
-            {product?.images && <ImageView />}
-            <div className="w-full md:w-1/2 flex flex-col gap-5">Details</div>
-        </Container>
-    )
-}
+  return (
+    <Container className="flex flex-col md:flex-row gap-10 pb-10">
+      {product?.images && (
+        <ImageView images={product?.images} isStock={isStock}/>)}
+      <div className="w-full md:w-1/2 flex flex-col gap-5">
+        details
+      </div>
+    </Container>
+  );
+};
 
-export default SingleProductImage;
+export default SingleProductPage;
