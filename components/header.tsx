@@ -1,3 +1,5 @@
+"use client";
+
 import Container from "./Container";
 import Logo from "./Logo";
 import HeaderMenu from "./HeaderMenu";
@@ -5,11 +7,10 @@ import SearchBar from "./SearchBar";
 import Carticon from "./Carticon";
 import FavoriteButton from "./FavoriteButton";
 import MobileMenu from "./MobileMenu";
-import { currentUser } from "@clerk/nextjs/server";
-import { ClerkLoaded, SignedIn, UserButton, SignedOut, SignInButton } from "@clerk/nextjs";
+import { useUser, ClerkLoaded, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
-const Header = async () => {
-  const user = await currentUser();
+const Header = () => {
+  const { user } = useUser();
 
   return (
     <header className="bg-white/70 py-5 sticky top-0 z-50 backdrop-blur-md">
@@ -29,10 +30,7 @@ const Header = async () => {
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             <SignedOut>
-              {/* No extra <button>, directly provide text or your styled component */}
-              <SignInButton mode="modal">
-                Login
-              </SignInButton>
+              <SignInButton mode="modal">Login</SignInButton>
             </SignedOut>
           </ClerkLoaded>
         </div>
