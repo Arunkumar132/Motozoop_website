@@ -20,7 +20,12 @@ const CategoryList = ({categories,selectedCategory,setSelectedCategory}:Props) =
                         id={category?.slug?.current} 
                         className="rounded-sm"
                     />
-                    <Label>{category?.title}</Label>
+                    <Label
+                        htmlFor={category?.slug?.current}
+                        className={'${selectedCategory === category?.slug?.current ? "font-semibold text-shop_dark_green" : "font-normal"}'}
+                    >
+                        {category?.title}
+                    </Label>
                 </div>
             ))}
         </RadioGroup>
