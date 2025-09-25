@@ -4,7 +4,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import ImageView from "@/components/ImageView";
 import PriceView from "@/components/PriceView";
 import { getProductBySlug } from "@/sanity/queries";
-import { StarIcon } from "lucide-react";
+import { CornerDownLeft, StarIcon, Truck } from "lucide-react";
 import React from "react";
 import {FaRegQuestionCircle} from "react-icons/fa";
 import {FiShare2} from "react-icons/fi";
@@ -74,9 +74,35 @@ const SingleProductPage = async ({
                 <p>Share</p>
             </button>
         </div>
+        <div className="flex flex-col">
+          <div className="border border-lightColor/25 border-b-0 p-3 flex items-center gap-2.5">
+            <Truck size={30} className="text-shop_orange" />
+            <div>
+              <p className="text-base font-semibold text-black">
+                Free Delivery
+              </p>
+              <p className="text-sm text-gray-500 underline underline-offset-2">
+                Enter the Postal Code for Delivery Availability.
+              </p>
+            </div>
+          </div>
+          <div className="border border-lightColor/25 p-3 flex items-center gap-2.5">
+            <CornerDownLeft size={30} className="text-shop_orange" />
+            <div>
+              <p className="text-base font-semibold text-black">
+                Return Delivery
+              </p>
+              <p className="text-base font-semibold text-black">
+                Free 30 days Delivery Returns.{" "}
+                <span className="underline underline-offset-2">
+                  Details
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </Container>
   );
 };
-
 export default SingleProductPage;
