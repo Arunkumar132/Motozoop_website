@@ -1,3 +1,6 @@
+"use client";
+
+
 import { Product } from "@/sanity.types";
 import { Heart } from "lucide-react";
 import React, { useState } from "react";
