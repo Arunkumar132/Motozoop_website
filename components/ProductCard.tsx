@@ -9,6 +9,7 @@ import { Title } from "./Title";
 import PriceView from "./PriceView";
 import AddToCartButton from "./AddToCartButton";
 import { cn } from "@/lib/utils";
+import ProductSideMenu from "./ProductSideMenu";
 
 const ProductCard = ({ product }: { product: Product }) => {
   const productSlug = product.slug?.current || "";
@@ -38,6 +39,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         <div onClick={(e) => e.stopPropagation()}>
           <AddToWishListButton product={product} />
         </div>
+        <ProductSideMenu product={product} />
 
         {/* Status badges */}
         {product?.status === "sale" && (
