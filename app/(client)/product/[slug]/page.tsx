@@ -74,27 +74,27 @@ const SingleProductPage = async ({
                 <p>Share</p>
             </button>
         </div>
-        <div className="flex flex-col">
-          <div className="border border-lightColor/25 border-b-0 p-3 flex items-center gap-2.5">
+        <div className="flex flex-col w-100 gap-3.5 mt-2">
+          <div className="border border-darkColor/50 p-3 flex items-center gap-2.5">
             <Truck size={30} className="text-shop_orange" />
             <div>
               <p className="text-base font-semibold text-black">
                 Free Delivery
               </p>
-              <p className="text-sm text-gray-500 underline underline-offset-2">
+              <p className="text-base text-gray-500 underline underline-offset-2">
                 Enter the Postal Code for Delivery Availability.
               </p>
             </div>
           </div>
-          <div className="border border-lightColor/25 p-3 flex items-center gap-2.5">
+          <div className="border border-darkColor/50 p-3 flex items-center gap-2.5">
             <CornerDownLeft size={30} className="text-shop_orange" />
             <div>
               <p className="text-base font-semibold text-black">
                 Return Delivery
               </p>
-              <p className="text-base font-semibold text-black">
+              <p className="text-base text-black">
                 Free 30 days Delivery Returns.{" "}
-                <span className="underline underline-offset-2">
+                <span className="underline underline-offset-2 text-gray-500">
                   Details
                 </span>
               </p>

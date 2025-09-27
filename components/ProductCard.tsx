@@ -35,10 +35,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           )}
         </Link>
 
-        {/* Wishlist Button */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <AddToWishListButton product={product} />
-        </div>
+        
         <ProductSideMenu product={product} />
 
         {/* Status badges */}

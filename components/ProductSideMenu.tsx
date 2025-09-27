@@ -14,20 +14,22 @@ const ProductSideMenu = ({product, className}:{
     const [existingProduct, setExistingProduct] = useState<Product | null>(null);
     useEffect(() => {
         const availableProduct = favoriteProduct.find(
-            (item) => item._id === product._id
+            (item) => item._id === product?._id
         );
         setExistingProduct(availableProduct || null);
     }, [favoriteProduct, product]);
-    const handleFavorrite = (e: React.MouseEvent<HTMLSpanElement>) => {
-        e.preventDefault();
-        if(product?._id){
-            addToFavorite(product).then(() => {
-                toast.success(existingProduct ? "Removed from wishlist" : "Added to wishlist");
-            });
-        }
+    const handleFavorrite = (e: React.MouseEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    if (product?._id) {
+      addToFavorite(product).then(() => {
+        toast.success(
+          existingProduct ? `${product?.name?.substring(0,20)} - Removed from wishlist` : `${product?.name?.substring(0,20)} - Added to wishlist`
+        );
+      });
     }
+  };
     return(
-        <div className={cn("absolute top-2 right-2 flex flex-col gap-2 z-10", className)}>
+        <div className={cn("absolute top-2 right-2 flex flex-col gap-2 z-10 hover:cursor-pointer", className)}>
             <div 
                 onClick={handleFavorrite}
                 className={`p-2.5 rounded-full hover:bg-shop_dark_green hover:text-white  cursor-pointer ${existingProduct ? "bg-shop_dark_green/80 text-white" : "bg-lightColor/10 text-darkColor/80 hoverEffect"}`} 

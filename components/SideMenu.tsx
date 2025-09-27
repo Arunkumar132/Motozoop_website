@@ -6,6 +6,7 @@ import { headerData } from "@/constants/data";
 import { usePathname } from "next/navigation";
 import SocialMedia from "./SocialMedia";
 import { useOutsideClick } from "@/hooks";
+import { Button } from "./ui/button";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,12 +27,12 @@ const SideMenu: FC<SidebarProps> = ({ isOpen, onClose }) => {
       <div ref={sidebarRef} className="min-w-72 max-w-96 bg-black h-screen p-10 border-r border-shop_light_green flex flex-col gap-6">
         <div className="flex items-center justify-between gap-5">
           <Logo className="text-white" spanDesign="group-hover:text-white" />
-          <button
+          <Button
             onClick={onClose}
             className="hover:text-shop_light_green transition duration-300"
           >
             <X />
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-col space-y-3.5 font-semibold tracking-wide">
