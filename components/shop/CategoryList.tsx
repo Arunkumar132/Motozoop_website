@@ -1,4 +1,5 @@
 import React from 'react';
+"use client";
 import { Title } from '../Title';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';

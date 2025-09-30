@@ -57,3 +57,4 @@ const NoAccessToCart = () => {
 };
 
 export default NoAccessToCart;
+  

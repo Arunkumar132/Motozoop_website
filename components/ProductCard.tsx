@@ -1,3 +1,6 @@
+// components/ProductCard.tsx
+"use client";
+
 import { Product } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
 import { Flame, StarIcon } from "lucide-react";
@@ -35,7 +38,6 @@ const ProductCard = ({ product }: { product: Product }) => {
           )}
         </Link>
 
-        
         <ProductSideMenu product={product} />
 
         {/* Status badges */}
