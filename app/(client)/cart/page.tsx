@@ -9,7 +9,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { group } from "console";
 import { Title } from "@/components/Title";
 import { ShoppingBag, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
@@ -19,6 +19,12 @@ import toast from "react-hot-toast";
 import PriceFormatter from "@/components/PriceFormatter";
 import QuantityButtons from "@/components/QuantityButton";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { set } from "sanity";
+import { client } from "@/sanity/lib/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { RadioGroupItem } from "@radix-ui/react-radio-group";
 
 
 const CartPage = () => {
@@ -28,8 +34,32 @@ const CartPage = () => {
   const groupedItems = useStore((state) => state.getGroupedItems());
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-    //const [addresses, setAddresses] = useState<ADDRESS_QUERYResult | null>(null);
+  const [addresses, setAddresses] = useState<Address [] | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  
+  const fetchAddresses = async () => {
+    setLoading(true);
+    try {
+      const query= `*[_type== "address"] | order(publishedAt desc)`;
+      const data = await client.fetch(query);
+      setAddresses(data);
+      const defaultAddress = data.find((addr: Address) => addr.default);
+      if (defaultAddress) {
+        setSelectedAddress(defaultAddress);
+      } else if (data.length > 0) {
+        setSelectedAddress(data[0]);
+      }
+    } catch (error) {
+      console.log("Error fetching addresses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+  },[])
+  
   const handleResetCart = () => {
     const confirmReset = window.confirm("Are you sure you want to reset the cart?");
     if (confirmReset) {
@@ -120,16 +150,58 @@ const CartPage = () => {
                 <div>
                   <div className="lg:col-span-1">
                     <div className="hidden md:inline-block w-full bg-white p-6 rounded-lg border">
-                      <h2>
+                      <h2 className="text-xl font-semibold mb-4">
                         Order Summary
-                      </h2> 
+                      </h2>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span>SubTotal</span>
+                          <PriceFormatter amount={getTotalPrice()} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Discount</span>
+                          <PriceFormatter amount= {getTotalPrice() - getSubTotalPrice()} />
+                        </div>
+                        <Separator />
+                        <div className="flex items-center justify-between font-semibold text-lg">
+                          <span>Total</span>
+                          <PriceFormatter amount={getSubTotalPrice()}  
+                          className="text-lg font-bold text-black"/>
+                        </div>
+                        <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" size="lg">
+                          {loading ? "Processing..." : ("Proceed to Checkout")}
+                        </Button>
+                      </div>  
+                    </div>
+                    <div>
+                      {addresses && (
+                        <div className="bg-white rounded-md mt-5">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Delivery Address</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <RadioGroup defaultValue={addresses?.find((addr) => addr.default)?._id.toString()}>
+                                {addresses.map((address) => (
+                                  <div key={address._id}
+                                  onClick={() => setSelectedAddress(address)}
+                                  className={`flex items-center space-x-2 mb-4 cursor-pointer ${selectedAddress?._id === address?._id && "text-shop_dark_green"}`}
+                                  >
+                                    <RadioGroupItem value={address?._id.toString()} />
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 {/*Order summary for mobile view*/}
                 <div className="md:hidden fixed bottom-0 left-0 w-full bg-white pt-2">
                   <div className="bg-white p-4 rounded-lg border mx-4">
-                    <h2>Order Summary</h2>
+                    <h2 className=" ">Order Summary</h2>
                   </div>
                 </div>
               </div>

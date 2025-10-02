@@ -300,7 +300,6 @@ export type Category = {
   description?: string;
   range?: number;
   featured?: boolean;
-  productCount?: number;
   image?: {
     asset?: {
       _ref: string;
@@ -310,7 +309,6 @@ export type Category = {
     };
     media?: unknown;
     hotspot?: SanityImageHotspot;
-
     crop?: SanityImageCrop;
     _type: "image";
   };
@@ -540,6 +538,50 @@ export type DEAL_PRODUCTSResult = Array<{
   varient?: "car_care_products" | "dashboard_accesories" | "detailing" | "exterior" | "interior";
   isFeatured?: boolean;
 }>;
+// Variable: PRODUCTS_BY_SLUG_QUERY
+// Query: *[_type == 'product' && slug.current == $slug] | order(name asc) [0]
+export type PRODUCTS_BY_SLUG_QUERYResult = {
+  _id: string;
+  _type: "product";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  slug?: Slug;
+  images?: Array<{
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+    _key: string;
+  }>;
+  description?: string;
+  price?: number;
+  discount?: number;
+  categories?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "category";
+  }>;
+  stock?: number;
+  brand?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "brand";
+  };
+  status?: "hot" | "new" | "sale";
+  varient?: "car_care_products" | "dashboard_accesories" | "detailing" | "exterior" | "interior";
+  isFeatured?: boolean;
+} | null;
 
 // Query TypeMap
 import "@sanity/client";
@@ -547,5 +589,6 @@ declare module "@sanity/client" {
   interface SanityQueries {
     "*[_type == 'blog' && isLatest == true] | order(name asc){\n    ...,\n    blogcategories[]->{\n      title\n    }\n  }": LATEST_BLOG_QUERYResult;
     "*[_type == 'product' && status == 'hot'] | order(name asc){\n    ...,\n    \"categories\": categories[]->title\n  }": DEAL_PRODUCTSResult;
+    "*[_type == 'product' && slug.current == $slug] | order(name asc) [0]": PRODUCTS_BY_SLUG_QUERYResult;
   }
 }
