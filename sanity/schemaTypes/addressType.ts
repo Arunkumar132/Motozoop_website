@@ -43,10 +43,10 @@ export const addressType = defineType({
       name: "zipCode",
       title: "ZIP Code",
       type: "string",
-      description: "5 or 9 digit ZIP code",
+      description: "6 or 9 digit ZIP code",
       validation: (Rule) =>
         Rule.required()
-          .regex(/^\d{5}(-\d{4})?$/, {
+          .regex(/^\d{6}(-\d{4})?$/, {
             name: "zipCode",
             invert: false,
           })
@@ -54,7 +54,7 @@ export const addressType = defineType({
             if (!zip) {
               return "ZIP code is required";
             }
-            if (!zip.match(/^\d{5}(-\d{4})?$/)) {
+            if (!zip.match(/^\d{6 }(-\d{4})?$/)) {
               return "Please enter a valid ZIP code";
             }
             return true;
