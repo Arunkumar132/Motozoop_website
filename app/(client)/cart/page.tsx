@@ -82,6 +82,8 @@ const CartPage = () => {
     }
   };
 
+  //
+
   const hasItems =
     Array.isArray(groupedItems) && groupedItems.length > 0;
 
@@ -220,6 +222,8 @@ const CartPage = () => {
                         <Button
                           className="w-full rounded-full font-semibold tracking-wide hoverEffect"
                           size="lg"
+                          disabled={loading}
+ 
                         >
                           {loading ? "Processing..." : "Proceed to Checkout"}
                         </Button>
@@ -282,13 +286,32 @@ const CartPage = () => {
                 <div className="md:hidden fixed bottom-0 left-0 w-full bg-white pt-2">
                   <div className="bg-white p-4 rounded-lg border mx-4">
                     <h2 className="font-semibold">Order Summary</h2>
-                    <div className="flex items-center justify-between mt-2">
-                      <span>Total</span>
-                      <PriceFormatter amount={getSubTotalPrice()} />
-                    </div>
-                    <Button className="w-full mt-3 rounded-full font-semibold tracking-wide hoverEffect" size="lg">
-                      {loading ? "Processing..." : "Proceed to Checkout"}
-                    </Button>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span>SubTotal</span>
+                          <PriceFormatter amount={getTotalPrice()} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Discount</span>
+                          <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} />
+                        </div>
+                        <Separator />
+                        <div className="flex items-center justify-between font-semibold text-lg">
+                          <span>Total</span>
+                          <PriceFormatter
+                            amount={getSubTotalPrice()}
+                            className="text-lg font-bold text-black"
+                          />
+                        </div>
+                        <Button
+                          className="w-full rounded-full font-semibold tracking-wide hoverEffect"
+                          size="lg"
+                          disabled={loading}
+  
+                        >
+                          {loading ? "Processing..." : "Proceed to Checkout"}
+                        </Button>
+                      </div>
                   </div>
                 </div>
               </div>

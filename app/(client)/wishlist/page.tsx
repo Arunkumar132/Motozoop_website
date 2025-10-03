@@ -8,7 +8,7 @@ const WishlistPage = async () => {
   return (
     <>
       {user ? (
-        <WishListProducts/>
+        <WishListProducts  />
       ) : (
         <NoAccessToCart details="Login to view your wishlist items. Don't miss out on your cart products to make the payment!" />
       )}

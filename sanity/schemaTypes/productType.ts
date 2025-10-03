@@ -99,6 +99,22 @@ export const productType = defineType({
       description: "Toggle to featured on or off",
       initialValue: false,
     }),
+
+     defineField({
+      name: "colors",
+      title: "Available Colors",
+      type: "array",
+      of: [{ type: "string" }],
+      description: "Enter all available colors (e.g. Red, Metallic Grey, #ff5733).",
+    }),
+
+    defineField({
+      name: "statues",
+      title: "Statues",
+      type: "array",
+      of: [{ type: "string" }],
+      description: "Add multiple statue values (optional)",
+    }),
   ],
   preview: {
     select: {
