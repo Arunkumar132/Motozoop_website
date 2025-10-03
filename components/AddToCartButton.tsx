@@ -23,7 +23,7 @@ const AddToCartButton = ({ product, className }: Props) => {
   const handleAddToCart = () =>{
     if((product?.stock as number) > itemCount){
       addItem(product);
-      toast.success(`${product?.name?.substring(0,12)} added successfully to cart`,
+      toast.success(`${product?.name?.substring(0,20)} added successfully to cart`,
       );
     } else {
       toast.error("Can not add more items, stock limit reached.");

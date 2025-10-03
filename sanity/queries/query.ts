@@ -29,4 +29,48 @@ const GET_ALL_BLOG = defineQuery(
   }`
 );
 
-export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG };
+const SINGLE_BLOG = defineQuery(
+  `*[_type == 'blog' && slug.current == $slug] [0]{
+    ...,
+      author->{
+      name,
+      image,
+  },
+  blogcategories[]->{
+    title,
+    'slug': slug.current
+    }
+  }`
+);
+
+const BLOG_CATEGORIES = defineQuery(`
+  *[_type == "blogcategories"] {
+    _id,
+    title,
+    slug
+  }
+`);
+
+
+const OTHER_BLOGS = defineQuery(`*[
+  _type == 'blog' 
+  && defined(slug.current) 
+  && slug.current != $slug
+] | order(publishedAt desc)[0...$quantity]{
+  ...
+  publishedAt,
+  title,
+  slug,
+  mainImage,
+  author->{
+    name,
+    image,
+},
+categories[]->{
+  title,
+  'slug': slug.current
+  }
+  ]`
+);
+
+export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG, SINGLE_BLOG, BLOG_CATEGORIES, OTHER_BLOGS };

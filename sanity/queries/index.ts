@@ -1,5 +1,5 @@
 import { sanityFetch } from "../lib/live";
-import { DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, PRODUCTS_BY_SLUG_QUERY } from "./query";
+import { BLOG_CATEGORIES, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, OTHER_BLOGS, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
 
 const getCategories = async (quantity?: number) => {
   try {
@@ -73,4 +73,57 @@ const getAllBlogs = async (quantity: number) => {
   }
 };
 
-export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs };
+const getSingleBlog = async (slug: string) => {
+  try {
+    const { data } = await sanityFetch({
+      query: SINGLE_BLOG,
+      params: { slug },
+    });
+    return data ?? [];
+  } catch (error) {
+    console.log("Error fetching single blog", error);
+    return [];
+  }
+}
+
+const getBlogCategories = async () => {
+  try {
+    const response = await sanityFetch({
+      query: BLOG_CATEGORIES,
+    });
+
+    const blogs = response.data || [];
+
+    // Flatten categories from blogs
+    const categories = blogs.flatMap(
+      (blog: any) => blog.blogcategories || []
+    );
+
+    // Deduplicate by _id
+    const uniqueCategories = Array.from(
+      new Map(categories.map((cat: any) => [cat._id, cat])).values()
+    );
+
+    return uniqueCategories;
+  } catch (error) {
+    console.error("Error fetching blog categories", error);
+    return [];
+  }
+};
+
+
+
+const getOthersBlog = async (slug: string, quantity: number) => {
+  try {
+    const { data } = await sanityFetch({
+      query: OTHER_BLOGS,
+      params: { slug, quantity },
+    });
+    return data ?? [];
+  } catch (error) {
+    console.log("Error fetching other blogs", error);
+    return [];
+  }
+}
+
+export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getBlogCategories, getOthersBlog };

@@ -19,17 +19,17 @@ const QuantityButtons = ({product, className}: Props) => {
     const handleRemoveItem = () => {
         removeItem(product?._id);
         if(itemCount > 1){
-                  toast.success(`${product?.name?.substring(0,12)} - Quantity decreased`);
+                  toast.success(`${product?.name?.substring(0,20)} - Quantity decreased`);
 
         } else {
-            toast.success(`${product?.name?.substring(0,12)} removed from cart`);
+            toast.success(`${product?.name?.substring(0,20)} removed from cart`);
         }
     };
 
     const handleAddToCart = () =>{
     if((product?.stock as number) > itemCount){
       addItem(product);
-      toast.success(`${product?.name?.substring(0,12)} - Quantity increased`,
+      toast.success(`${product?.name?.substring(0,20)} - Quantity increased`,
       );
     } else {
       toast.error("Can not add more items, stock limit reached.");
