@@ -25,8 +25,9 @@ const GET_ALL_BLOG = defineQuery(
     ...,
     blogcategories[]->{
       title
+}
     }
-  }`
+  `  
 );
 
 const SINGLE_BLOG = defineQuery(
@@ -43,13 +44,12 @@ const SINGLE_BLOG = defineQuery(
   }`
 );
 
-const BLOG_CATEGORIES = defineQuery(`
-  *[_type == "blogcategories"] {
-    _id,
-    title,
-    slug
-  }
-`);
+const BLOG_CATEGORIES = defineQuery(
+  `*[_type == "blogcategories"] {
+    ...
+    }
+  }`
+);
 
 
 const OTHER_BLOGS = defineQuery(`*[
@@ -72,5 +72,8 @@ categories[]->{
   }
   ]`
 );
+
+
+
 
 export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG, SINGLE_BLOG, BLOG_CATEGORIES, OTHER_BLOGS };

@@ -58,7 +58,7 @@ const getProductBySlug = async(slug : string) =>{
     console.error("Error",error);
     return null;
   }
-}
+};
 
 const getAllBlogs = async (quantity: number) => {
   try {
@@ -84,34 +84,19 @@ const getSingleBlog = async (slug: string) => {
     console.log("Error fetching single blog", error);
     return [];
   }
-}
+};
 
 const getBlogCategories = async () => {
   try {
-    const response = await sanityFetch({
+    const { data } = await sanityFetch({
       query: BLOG_CATEGORIES,
     });
-
-    const blogs = response.data || [];
-
-    // Flatten categories from blogs
-    const categories = blogs.flatMap(
-      (blog: any) => blog.blogcategories || []
-    );
-
-    // Deduplicate by _id
-    const uniqueCategories = Array.from(
-      new Map(categories.map((cat: any) => [cat._id, cat])).values()
-    );
-
-    return uniqueCategories;
+    return data ?? [];
   } catch (error) {
-    console.error("Error fetching blog categories", error);
-    return [];
+    console.log ("Error fetching all brands:",error)
+    return[];
   }
 };
-
-
 
 const getOthersBlog = async (slug: string, quantity: number) => {
   try {
@@ -124,6 +109,6 @@ const getOthersBlog = async (slug: string, quantity: number) => {
     console.log("Error fetching other blogs", error);
     return [];
   }
-}
+};
 
 export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getBlogCategories, getOthersBlog };
