@@ -1,3 +1,4 @@
+import { serverClient } from "@/lib/sanity.server";
 import { sanityFetch } from "../lib/live";
 import { BLOG_CATEGORIES, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, OTHER_BLOGS, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
 
@@ -75,40 +76,33 @@ const getAllBlogs = async (quantity: number) => {
 
 const getSingleBlog = async (slug: string) => {
   try {
-    const { data } = await sanityFetch({
-      query: SINGLE_BLOG,
-      params: { slug },
-    });
-    return data ?? [];
+    const blog: Blog = await serverClient.fetch(SINGLE_BLOG, { slug });
+    return blog ?? null;
   } catch (error) {
-    console.log("Error fetching single blog", error);
-    return [];
+    console.error("Error fetching single blog:", error);
+    return null;
   }
 };
 
+
 const getBlogCategories = async () => {
   try {
-    const { data } = await sanityFetch({
-      query: BLOG_CATEGORIES,
-    });
-    return data ?? [];
+    const categories = await serverClient.fetch(BLOG_CATEGORIES);
+    return categories ?? [];
   } catch (error) {
-    console.log ("Error fetching all brands:",error)
-    return[];
+    console.error("Error fetching blog categories:", error);
+    return [];
   }
 };
 
 const getOthersBlog = async (slug: string, quantity: number) => {
   try {
-    const { data } = await sanityFetch({
-      query: OTHER_BLOGS,
-      params: { slug, quantity },
-    });
-    return data ?? [];
+    const blogs = await serverClient.fetch(OTHER_BLOGS, { slug, quantity });
+    return blogs ?? [];
   } catch (error) {
-    console.log("Error fetching other blogs", error);
+    console.error("Error fetching other blogs:", error);
     return [];
   }
 };
 
-export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getBlogCategories, getOthersBlog };
+export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getOthersBlog, getBlogCategories };

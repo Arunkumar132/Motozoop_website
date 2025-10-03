@@ -30,49 +30,52 @@ const GET_ALL_BLOG = defineQuery(
   `  
 );
 
-const SINGLE_BLOG = defineQuery(
-  `*[_type == 'blog' && slug.current == $slug] [0]{
-    ...,
-      author->{
-      name,
-      image,
-  },
-  blogcategories[]->{
+const SINGLE_BLOG = defineQuery(`
+  *[_type=="blog" && slug.current == $slug][0]{
     title,
-    'slug': slug.current
+    body,
+    mainImage,
+    publishedAt,
+    author->{
+      name,
+      image
+    },
+    categories[]->{
+      title,
+      'slug': slug.current
     }
-  }`
-);
-
-const BLOG_CATEGORIES = defineQuery(
-  `*[_type == "blogcategories"] {
-    ...
-    }
-  }`
-);
-
-
-const OTHER_BLOGS = defineQuery(`*[
-  _type == 'blog' 
-  && defined(slug.current) 
-  && slug.current != $slug
-] | order(publishedAt desc)[0...$quantity]{
-  ...
-  publishedAt,
-  title,
-  slug,
-  mainImage,
-  author->{
-    name,
-    image,
-},
-categories[]->{
-  title,
-  'slug': slug.current
   }
-  ]`
-);
+`);
 
+const BLOG_CATEGORIES = defineQuery(`
+  *[_type == "blogcategories"]{
+    _id,
+    title,
+    slug,
+    "blogCount": count(*[_type=="blog" && references(^._id)])
+  }
+`);
+
+const OTHER_BLOGS = defineQuery(`
+  *[
+    _type == "blog" &&
+    defined(slug.current) &&
+    slug.current != $slug
+  ] | order(publishedAt desc)[0...$quantity]{
+    publishedAt,
+    title,
+    slug,
+    mainImage,
+    author->{
+      name,
+      image
+    },
+    categories[]->{
+      title,
+      'slug': slug.current
+    }
+  }
+`);
 
 
 

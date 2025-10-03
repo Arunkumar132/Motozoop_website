@@ -16,9 +16,9 @@ interface SingleBlogPageProps {
   params: { slug: string };
 }
 
-const SingleBlogPage = async (props: SingleBlogPageProps) => {
-  const params = await props.params; // ✅ await params
-  const { slug } = params;
+// ✅ Server Component: can be async
+const SingleBlogPage = async ({ params }: SingleBlogPageProps) => {
+  const { slug } = params; // ✅ no await
 
   const blog = await getSingleBlog(slug);
   if (!blog) return notFound();
@@ -42,7 +42,7 @@ const SingleBlogPage = async (props: SingleBlogPageProps) => {
           {/* Blog Meta */}
           <div className="text-xs flex items-center gap-5 my-7">
             <div className="flex items-center gap-2">
-              {blog.blogcategories?.map((item: { title: string }, index: number) => (
+              {blog.blogcategories?.map((item, index) => (
                 <p
                   key={index}
                   className="font-semibold text-shop_dark_green tracking-wider cursor-pointer"
@@ -71,23 +71,11 @@ const SingleBlogPage = async (props: SingleBlogPageProps) => {
                 value={blog.body}
                 components={{
                   block: {
-                    normal: ({ children }) => (
-                      <p className="mb-5 text-base/8 first:mt-0 last:mb-0">{children}</p>
-                    ),
-                    h2: ({ children }) => (
-                      <h2 className="text-2xl/8 font-medium tracking-tight text-gray-950 first:mt-0 last:mb-0">
-                        {children}
-                      </h2>
-                    ),
-                    h3: ({ children }) => (
-                      <h3 className="text-xl/8 font-medium tracking-tight text-gray-950 first:mt-0 last:mb-0">
-                        {children}
-                      </h3>
-                    ),
+                    normal: ({ children }) => <p className="mb-5 text-base/8">{children}</p>,
+                    h2: ({ children }) => <h2 className="text-2xl/8 font-medium">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-xl/8 font-medium">{children}</h3>,
                     blockquote: ({ children }) => (
-                      <blockquote className="my-5 border-l-2 border-l-gray-300 pl-6 text-base/8 text-gray-950 first:mt-0 last:mb-0">
-                        {children}
-                      </blockquote>
+                      <blockquote className="my-5 border-l-2 border-l-gray-300 pl-6">{children}</blockquote>
                     ),
                   },
                   types: {
@@ -112,43 +100,14 @@ const SingleBlogPage = async (props: SingleBlogPageProps) => {
                     },
                   },
                   list: {
-                    bullet: ({ children }) => (
-                      <ul className="list-disc pl-4 text-base/8 marker:text-gray-400">
-                        {children}
-                      </ul>
-                    ),
-                    number: ({ children }) => (
-                      <ol className="list-decimal pl-4 text-base/8 marker:text-gray-400">
-                        {children}
-                      </ol>
-                    ),
-                  },
-                  listItem: {
-                    bullet: ({ children }) => (
-                      <li className="my-2 pl-2 has-[br]:mb-8">{children}</li>
-                    ),
-                    number: ({ children }) => (
-                      <li className="my-2 pl-2 has-[br]:mb-8">{children}</li>
-                    ),
+                    bullet: ({ children }) => <ul className="list-disc pl-4">{children}</ul>,
+                    number: ({ children }) => <ol className="list-decimal pl-4">{children}</ol>,
                   },
                   marks: {
-                    strong: ({ children }) => (
-                      <strong className="font-semibold text-gray-950">{children}</strong>
-                    ),
-                    code: ({ children }) => (
-                      <>
-                        <span aria-hidden>`</span>
-                        <code className="text-[15px]/8 font-semibold text-gray-950">
-                          {children}
-                        </code>
-                        <span aria-hidden>`</span>
-                      </>
-                    ),
+                    strong: ({ children }) => <strong>{children}</strong>,
+                    code: ({ children }) => <code>{children}</code>,
                     link: ({ children, value }) => (
-                      <Link
-                        href={value.href}
-                        className="font-medium text-gray-950 underline decoration-gray-400 underline-offset-4 hover:decoration-gray-600"
-                      >
+                      <Link href={value.href} className="underline">
                         {children}
                       </Link>
                     ),
@@ -159,7 +118,7 @@ const SingleBlogPage = async (props: SingleBlogPageProps) => {
 
             {/* Back to Blogs */}
             <div className="mt-10">
-              <Link href={"/blog"} className="flex items-center gap-1">
+              <Link href="/blog" className="flex items-center gap-1">
                 <ChevronLeftIcon className="size-5" />
                 <span className="text-sm font-semibold">Back to blogs</span>
               </Link>
@@ -174,53 +133,45 @@ const SingleBlogPage = async (props: SingleBlogPageProps) => {
   );
 };
 
-// Sidebar component
+// ✅ Sidebar as Server Component
 const BlogLeft = async ({ slug }: { slug: string }) => {
   const categories = await getBlogCategories();
-  const latestBlogs = await getOthersBlog(slug, 5); // Only latest 5 blogs
+  const latestBlogs = await getOthersBlog(slug, 5);
 
   return (
     <div>
-      {/* Blog Categories */}
+      {/* Blog Categories 
       <div className="border border-lightColor p-5 rounded-md">
         <Title className="text-base">Blog Categories</Title>
         <div className="space-y-2 mt-2">
-          {categories?.map((category, index) => (
+          {categories?.map((blogcategories, index) => (
             <div
               key={index}
-              className="flex justify-between items-center text-lightColor/90 text-sm py-2 border-b last:border-b-0 hover:text-shop_dark_green hover:font-semibold hoverEffect cursor-pointer"
+              className="flex justify-between items-center text-lightColor/90 text-sm py-2 border-b last:border-b-0 hover:text-shop_dark_green hover:font-semibold cursor-pointer"
             >
-              <p>{category.title}</p>
-              <p className="text-darkColor font-semibold">
-                {category.blogCount || 0} {/* Add blogCount in your query if possible */}
-              </p>
+              <p>{category?.title}</p>
+              <p className="text-darkColor font-semibold">{`(${category?.blogCount || 0})`}</p>
             </div>
           ))}
         </div>
       </div>
-
+      */}
       {/* Latest Blogs */}
       <div className="border border-lightColor p-5 rounded-md mt-10">
         <Title className="text-base">Latest Blogs</Title>
         <div className="space-y-4 mt-4">
           {latestBlogs?.map((blog: Blog, index: number) => (
-            <Link
-              href={`/blog/${blog?.slug?.current}`}
-              key={index}
-              className="flex items-center gap-2 group"
-            >
+            <Link href={`/blog/${blog?.slug?.current}`} key={index} className="flex items-center gap-2 group">
               {blog?.mainImage && (
                 <Image
                   src={urlFor(blog.mainImage).url()}
                   alt="Blog image"
                   width={100}
                   height={100}
-                  className="w-16 h-16 object-cover rounded-full border-[1px] border-shop_dark_green/10 group-hover:border-shop_dark_green hoverEffect"
+                  className="w-16 h-16 object-cover rounded-full border-[1px] border-shop_dark_green/10 group-hover:border-shop_dark_green"
                 />
               )}
-              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green hoverEffect">
-                {blog?.title}
-              </p>
+              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green">{blog?.title}</p>
             </Link>
           ))}
         </div>
