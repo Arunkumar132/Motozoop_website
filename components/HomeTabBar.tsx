@@ -11,13 +11,12 @@ interface Props {
 
 const HomeTabBar = ({ selectedTab, onTabSelect }: Props) => {
   return (
-    <div className="flex items-center justify-between flex-wrap gap-5">
-      
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       {/* Tabs */}
-      <div className="flex items-center gap-3 text-sm font-semibold flex-wrap">
+      <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
         {productTabs.map((tab, index) => (
           <button
-            key={tab.value || index} // Unique key fallback
+            key={tab.value || index}
             onClick={() => onTabSelect(tab.value)}
             className={`border border-shop_light_green/10 px-5 py-2 rounded-full hover:bg-shop_light_green hover:border-shop_light_green hover:text-white transition-colors duration-200 ${
               selectedTab === tab.value
@@ -31,12 +30,14 @@ const HomeTabBar = ({ selectedTab, onTabSelect }: Props) => {
       </div>
 
       {/* See all link */}
-      <Link
-        href="/shop"
-        className="border border-shop_light_green/30 px-5 py-2 rounded-full hover:bg-shop_light_green hover:border-shop_light_green hover:text-white transition-colors duration-200"
-      >
-        See all
-      </Link>
+      <div className="sm:flex-shrink-0">
+        <Link
+          href="/shop"
+          className="block text-center border border-shop_light_green/30 px-5 py-2 rounded-full hover:bg-shop_light_green hover:border-shop_light_green hover:text-white transition-colors duration-200"
+        >
+          See all
+        </Link>
+      </div>
     </div>
   );
 };
