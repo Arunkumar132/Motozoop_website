@@ -11,10 +11,10 @@ const LatestBlog = async () => {
   const blogs = await getLatestBlogs();
 
   return (
-    <div className="mb-10 lg:mb-20">
+    <div className="mb-10 lg:mb-20 border border-shop_light_green/20 rounded-md p-5 lg:p-7 bg-white">
       <Title>Latest Blog</Title>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
         {blogs?.map((blog) => (
           <div
             key={blog?._id}
@@ -57,7 +57,7 @@ const LatestBlog = async () => {
                 {/* --- Blog Title (Clamped to Two Lines) --- */}
                 <Link
                   href={`/blog/${blog?.slug?.current}`}
-                  className="block text-base font-semibold tracking-wide mt-2 line-clamp-1 hover:text-shop_dark_green hoverEffect"
+                  className="block text-base font-semibold tracking-wide mt-2 line-clamp-2 hover:text-shop_dark_green hoverEffect"
                 >
                   {blog?.title}
                 </Link>
