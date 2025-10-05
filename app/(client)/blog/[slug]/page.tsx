@@ -158,7 +158,7 @@ const BlogLeft = async ({ slug }: { slug: string }) => {
       */}
       {/* Latest Blogs */}
       <div className="border border-lightColor p-5 rounded-md mt-10">
-        <Title className="text-base">Latest Blogs</Title>
+        <p className="text-xl font-semibold text-shop_dark_green">Latest Blogs</p>
         <div className="space-y-4 mt-4">
           {latestBlogs?.map((blog: Blog, index: number) => (
             <Link href={`/blog/${blog?.slug?.current}`} key={index} className="flex items-center gap-2 group">
