@@ -2,8 +2,8 @@ export const headerData = [
     { title: "Home", href: "/" },
     { title: "Shop", href: "/shop" },
     { title: "Blog", href: "/blog" },
-    { title: "Contact Us", href: "/contact" },
-    { title: "We are Hiring", href: "/hire" },
+    { title: "Contact Us", href: "/contact" },  
+    { title: "Franchise Enquiry", href: "/franchise" },  
     { title: "Hot Deal", href: "/deal" },
 ];
 
