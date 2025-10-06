@@ -24,7 +24,6 @@ import PriceFormatter from "@/components/PriceFormatter";
 import QuantityButtons from "@/components/QuantityButton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { client } from "@/sanity/lib/client";
 import {
   Card,
   CardContent,
@@ -71,23 +70,18 @@ const CartPage = () => {
     zip: "",
   });
 
-  // Fetch addresses from Sanity
+  // Fetch addresses from Sanity (read-only, safe for client)
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const query = `*[_type== "address"] | order(_createdAt desc){
-        _id, name, address, mobile, city, state, zip, default
-      }`;
-      const data: Address[] = await client.fetch(query);
+      const res = await fetch("/api/address", { method: "GET" });
+      const data: Address[] = await res.json();
       setAddresses(data);
       const defaultAddress = data.find((addr) => addr.default);
-      if (defaultAddress) {
-        setSelectedAddress(defaultAddress);
-      } else if (data.length > 0) {
-        setSelectedAddress(data[0]);
-      }
+      if (defaultAddress) setSelectedAddress(defaultAddress);
+      else if (data.length > 0) setSelectedAddress(data[0]);
     } catch (error) {
-      console.log("Error fetching addresses:", error);
+      console.error("Error fetching addresses:", error);
     } finally {
       setLoading(false);
     }
@@ -109,12 +103,64 @@ const CartPage = () => {
 
   const hasItems = Array.isArray(groupedItems) && groupedItems.length > 0;
 
+  // ------------------ Sanity API Helpers ------------------
+  const addAddressToSanity = async (addressData: any) => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addressData),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setAddresses((prev) =>
+          prev ? [result.address, ...prev] : [result.address]
+        );
+        setSelectedAddress(result.address);
+        toast.success("Address added successfully!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add address.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteAddressFromSanity = async (id: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/address", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setAddresses((prev) => prev?.filter((a) => a._id !== id) || []);
+        if (selectedAddress?._id === id) setSelectedAddress(null);
+        toast.success("Address deleted successfully!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete address.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 pb-52 md:pb-10">
       {isSignedIn ? (
         <Container>
           {hasItems ? (
             <>
+              {/* ---------------- CART HEADER ---------------- */}
               <div className="flex items-center gap-2 py-5">
                 <ShoppingBag className="text-darkColor" />
                 <Title>Shopping Cart</Title>
@@ -185,6 +231,7 @@ const CartPage = () => {
                                   </span>
                                 </p>
                               </div>
+
                               <div className="flex items-center gap-2">
                                 <TooltipProvider>
                                   <Tooltip>
@@ -251,9 +298,7 @@ const CartPage = () => {
                   <div className="lg:col-span-1">
                     {/* ORDER SUMMARY */}
                     <div className="hidden md:inline-block w-full bg-white p-6 rounded-lg border">
-                      <h2 className="text-xl font-semibold mb-4">
-                        Order Summary
-                      </h2>
+                      <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <span>SubTotal</span>
@@ -323,7 +368,7 @@ const CartPage = () => {
                                         {address.state} {address.zip}
                                       </span>
                                       <span className="text-sm text-black/70">
-                                         {address.mobile}
+                                        {address.mobile}
                                       </span>
                                     </Label>
                                   </div>
@@ -333,19 +378,7 @@ const CartPage = () => {
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setAddresses((prev) =>
-                                        prev
-                                          ? prev.filter(
-                                              (a) => a._id !== address._id
-                                            )
-                                          : []
-                                      );
-                                      if (selectedAddress?._id === address._id) {
-                                        setSelectedAddress(null);
-                                      }
-                                      toast.success(
-                                        "Address deleted successfully!"
-                                      );
+                                      deleteAddressFromSanity(address._id!);
                                     }}
                                   >
                                     Delete
@@ -363,6 +396,7 @@ const CartPage = () => {
                                 <Button
                                   variant="outline"
                                   className="w-full mt-4"
+                                  onClick={(e) => e.stopPropagation()} // Prevent checkout click
                                 >
                                   Add New Address
                                 </Button>
@@ -438,7 +472,8 @@ const CartPage = () => {
 
                                 <DialogFooter>
                                   <Button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       const {
                                         name,
                                         address,
@@ -458,16 +493,7 @@ const CartPage = () => {
                                         toast.error("All fields are required!");
                                         return;
                                       }
-                                      const id = Date.now().toString();
-                                      const addressToAdd = {
-                                        ...newAddress,
-                                        _id: id,
-                                      };
-                                      setAddresses((prev) =>
-                                        prev
-                                          ? [...prev, addressToAdd]
-                                          : [addressToAdd]
-                                      );
+                                      addAddressToSanity(newAddress);
                                       setNewAddress({
                                         name: "",
                                         address: "",
@@ -477,9 +503,6 @@ const CartPage = () => {
                                         zip: "",
                                       });
                                       setIsAddressModalOpen(false);
-                                      toast.success(
-                                        "Address added successfully!"
-                                      );
                                     }}
                                     className="w-full"
                                   >
@@ -494,41 +517,42 @@ const CartPage = () => {
                     )}
                   </div>
                 </div>
-
-                {/* ---------------- MOBILE ORDER SUMMARY ---------------- */}
-                <div className="md:hidden fixed bottom-0 left-0 w-full bg-white pt-2">
-                  <div className="bg-white p-4 rounded-lg border mx-4">
-                    <h2 className="font-semibold">Order Summary</h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span>SubTotal</span>
-                        <PriceFormatter amount={getTotalPrice()} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Discount</span>
-                        <PriceFormatter
-                          amount={getTotalPrice() - getSubTotalPrice()}
-                        />
-                      </div>
-                      <Separator />
-                      <div className="flex items-center justify-between font-semibold text-lg">
-                        <span>Total</span>
-                        <PriceFormatter
-                          amount={getSubTotalPrice()}
-                          className="text-lg font-bold text-black"
-                        />
-                      </div>
-                      <Button
-                        className="w-full rounded-full font-semibold tracking-wide hoverEffect"
-                        size="lg"
-                        disabled={loading}
-                      >
-                        {loading ? "Processing..." : "Proceed to Checkout"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
               </div>
+
+             {/* ---------------- MOBILE ORDER SUMMARY FIXED BOTTOM ---------------- */}
+              <div className="fixed bottom-0 left-0 w-full bg-white shadow-md border-t p-4 md:hidden z-50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold">Subtotal:</span>
+                    <PriceFormatter amount={getTotalPrice()} className="font-semibold" />
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold">Discount:</span>
+                  <PriceFormatter
+                    amount={getTotalPrice() - getSubTotalPrice()}
+                    className="font-semibold text-red-600"
+                  />
+                </div>
+                <Separator className="my-2" />
+                <div className="flex items-center justify-between font-bold text-lg mb-2">
+                  <span>Total:</span>
+                  <PriceFormatter amount={getSubTotalPrice()} className="text-black" />
+                </div>
+                <Button
+                  className="w-full rounded-full font-semibold tracking-wide"
+                  size="lg"
+                  disabled={loading}
+                  onClick={() => {
+                    if (!selectedAddress) {
+                      toast.error("Please select a delivery address!");
+                      return;
+                    }
+                    window.location.href = "/checkout";
+                  }}
+                >
+                  {loading ? "Processing..." : "Proceed to Checkout"}
+                </Button>
+              </div>
+
             </>
           ) : (
             <EmptyCart />
