@@ -5,7 +5,7 @@ import EmptyCart from "@/components/EmptyCart";
 import NoAccessToCart from "@/components/NoAccessToCart";
 import { Address } from "@/sanity.types";
 import useStore from "@/store";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { Title } from "@/components/Title";
 import { ShoppingBag, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -33,6 +33,16 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const CartPage = () => {
   const {
@@ -46,15 +56,28 @@ const CartPage = () => {
   const [loading, setLoading] = useState(false);
   const groupedItems = useStore((state) => state.getGroupedItems());
   const { isSignedIn } = useAuth();
-  const { user } = useUser();
 
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
+  // Add Address modal state
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    name: "",
+    address: "",
+    mobile: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
+
+  // Fetch addresses from Sanity
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const query = `*[_type== "address"] | order(publishedAt desc)`;
+      const query = `*[_type== "address"] | order(_createdAt desc){
+        _id, name, address, mobile, city, state, zip, default
+      }`;
       const data: Address[] = await client.fetch(query);
       setAddresses(data);
       const defaultAddress = data.find((addr) => addr.default);
@@ -75,17 +98,16 @@ const CartPage = () => {
   }, []);
 
   const handleResetCart = () => {
-    const confirmReset = window.confirm("Are you sure you want to reset the cart?");
+    const confirmReset = window.confirm(
+      "Are you sure you want to reset the cart?"
+    );
     if (confirmReset) {
       resetCart();
       toast.success("Cart has been reset");
     }
   };
 
-  //
-
-  const hasItems =
-    Array.isArray(groupedItems) && groupedItems.length > 0;
+  const hasItems = Array.isArray(groupedItems) && groupedItems.length > 0;
 
   return (
     <div className="bg-gray-50 pb-52 md:pb-10">
@@ -99,14 +121,16 @@ const CartPage = () => {
               </div>
 
               <div className="grid lg:grid-cols-3 md:gap-8">
-                {/* Cart Products */}
+                {/* ---------------- CART PRODUCTS ---------------- */}
                 <div className="lg:col-span-2 rounded-lg">
                   <div className="border bg-white rounded-md">
-                    {groupedItems?.map(({ product }) => {
-                      const itemCount = getItemCount(product._id);
+                    {groupedItems?.map((item) => {
+                      const product = item.product;
+                      const itemCount = item.quantity;
+
                       return (
                         <div
-                          key={product?._id?.toString()}
+                          key={`${product._id}-${item.selectedColor}-${item.selectedStatue}`}
                           className="border-b p-2.5 last:border-b-0 flex items-center justify-between gap-5"
                         >
                           <div className="flex flex-1 items-start gap-2 h-36 md:h-44">
@@ -130,12 +154,30 @@ const CartPage = () => {
                                 <h2 className="text-base font-semibold line-clamp-1">
                                   {product?.name}
                                 </h2>
-                                <p className="text-sm capitalize">
-                                  Variant:{" "}
-                                  <span className="font-semibold">
-                                    {product?.varient}
-                                  </span>
-                                </p>
+                                {product?.varient && (
+                                  <p className="text-sm capitalize">
+                                    Variant:{" "}
+                                    <span className="font-semibold">
+                                      {product.varient}
+                                    </span>
+                                  </p>
+                                )}
+                                {item.selectedColor && (
+                                  <p className="text-sm capitalize">
+                                    Color:{" "}
+                                    <span className="font-semibold">
+                                      {item.selectedColor}
+                                    </span>
+                                  </p>
+                                )}
+                                {item.selectedStatue && (
+                                  <p className="text-sm capitalize">
+                                    Statue Type:{" "}
+                                    <span className="font-semibold">
+                                      {item.selectedStatue}
+                                    </span>
+                                  </p>
+                                )}
                                 <p className="text-sm capitalize">
                                   Status:{" "}
                                   <span className="font-semibold">
@@ -160,8 +202,13 @@ const CartPage = () => {
                                     <TooltipTrigger>
                                       <Trash
                                         onClick={() => {
-                                          deleteCartProduct(product?._id);
-                                          toast.success("Product removed from cart");
+                                          deleteCartProduct(product._id, {
+                                            selectedColor: item.selectedColor,
+                                            selectedStatue: item.selectedStatue,
+                                          });
+                                          toast.success(
+                                            "Product removed from cart"
+                                          );
                                         }}
                                         className="w-4 h-4 md:w-5 md:h-5 mr-1 text-gray-500 hover:text-red-600 hoverEffect"
                                       />
@@ -180,7 +227,11 @@ const CartPage = () => {
                               amount={(product?.price as number) * itemCount}
                               className="font-bold text-lg"
                             />
-                            <QuantityButtons product={product} />
+                            <QuantityButtons
+                              product={product}
+                              selectedColor={item.selectedColor}
+                              selectedStatue={item.selectedStatue}
+                            />
                           </div>
                         </div>
                       );
@@ -195,9 +246,10 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                {/* Order Summary */}
+                {/* ---------------- ORDER SUMMARY & ADDRESSES ---------------- */}
                 <div>
                   <div className="lg:col-span-1">
+                    {/* ORDER SUMMARY */}
                     <div className="hidden md:inline-block w-full bg-white p-6 rounded-lg border">
                       <h2 className="text-xl font-semibold mb-4">
                         Order Summary
@@ -209,7 +261,9 @@ const CartPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Discount</span>
-                          <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} />
+                          <PriceFormatter
+                            amount={getTotalPrice() - getSubTotalPrice()}
+                          />
                         </div>
                         <Separator />
                         <div className="flex items-center justify-between font-semibold text-lg">
@@ -223,95 +277,255 @@ const CartPage = () => {
                           className="w-full rounded-full font-semibold tracking-wide hoverEffect"
                           size="lg"
                           disabled={loading}
- 
                         >
                           {loading ? "Processing..." : "Proceed to Checkout"}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Delivery Addresses */}
-                    <div>
-                      {addresses && (
-                        <div className="bg-white rounded-md mt-5">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>Delivery Address</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <RadioGroup
-                                value={selectedAddress?._id?.toString()}
-                                onValueChange={(val) => {
-                                  const found = addresses.find(
-                                    (a) => a._id?.toString() === val
-                                  );
-                                  if (found) setSelectedAddress(found);
-                                }}
-                              >
-                                {addresses.map((address) => (
+                    {/* DELIVERY ADDRESSES */}
+                    {addresses && (
+                      <div className="bg-white rounded-md mt-5">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Delivery Address</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <RadioGroup
+                              value={selectedAddress?._id?.toString()}
+                              onValueChange={(val) => {
+                                const found = addresses.find(
+                                  (a) => a._id?.toString() === val
+                                );
+                                if (found) setSelectedAddress(found);
+                              }}
+                            >
+                              {addresses.map((address) => (
+                                <div
+                                  key={address._id}
+                                  className={`flex items-center justify-between mb-4 cursor-pointer ${
+                                    selectedAddress?._id === address._id
+                                      ? "text-shop_dark_green"
+                                      : ""
+                                  }`}
+                                >
                                   <div
-                                    key={address?._id?.toString()}
+                                    className="flex items-center space-x-2 flex-1"
                                     onClick={() => setSelectedAddress(address)}
-                                    className={`flex items-center space-x-2 mb-4 cursor-pointer ${
-                                      selectedAddress?._id === address?._id &&
-                                      "text-shop_dark_green"
-                                    }`}
                                   >
-                                    <RadioGroupItem value={address?._id?.toString()} />
-                                    <Label
-                                      htmlFor={`address-${address?._id}`}
-                                      className="grid gap-1.5 flex-1"
-                                    >
-                                      <span className="font-semibold">{address?.name}</span>
+                                    <RadioGroupItem value={address._id} />
+                                    <Label className="grid gap-1.5">
+                                      <span className="font-semibold">
+                                        {address.name}
+                                      </span>
                                       <span className="text-sm text-black/60">
                                         {address.address}, {address.city},{" "}
                                         {address.state} {address.zip}
                                       </span>
+                                      <span className="text-sm text-black/70">
+                                         {address.mobile}
+                                      </span>
                                     </Label>
                                   </div>
-                                ))}
-                              </RadioGroup>
-                              <Button variant="outline" className="w-full mt-4">
-                                Add New Address
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-                    </div>
+
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAddresses((prev) =>
+                                        prev
+                                          ? prev.filter(
+                                              (a) => a._id !== address._id
+                                            )
+                                          : []
+                                      );
+                                      if (selectedAddress?._id === address._id) {
+                                        setSelectedAddress(null);
+                                      }
+                                      toast.success(
+                                        "Address deleted successfully!"
+                                      );
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              ))}
+                            </RadioGroup>
+
+                            {/* ADD NEW ADDRESS MODAL */}
+                            <Dialog
+                              open={isAddressModalOpen}
+                              onOpenChange={setIsAddressModalOpen}
+                            >
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full mt-4"
+                                >
+                                  Add New Address
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                  <DialogTitle>Add New Address</DialogTitle>
+                                </DialogHeader>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+                                  <Input
+                                    placeholder="Name"
+                                    value={newAddress.name}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="Mobile Number"
+                                    value={newAddress.mobile}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        mobile: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="City"
+                                    value={newAddress.city}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        city: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="State"
+                                    value={newAddress.state}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        state: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="Zip Code"
+                                    value={newAddress.zip}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        zip: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Textarea
+                                    placeholder="Address"
+                                    value={newAddress.address}
+                                    onChange={(e) =>
+                                      setNewAddress((prev) => ({
+                                        ...prev,
+                                        address: e.target.value,
+                                      }))
+                                    }
+                                    className="md:col-span-2"
+                                  />
+                                </div>
+
+                                <DialogFooter>
+                                  <Button
+                                    onClick={() => {
+                                      const {
+                                        name,
+                                        address,
+                                        mobile,
+                                        city,
+                                        state,
+                                        zip,
+                                      } = newAddress;
+                                      if (
+                                        !name ||
+                                        !address ||
+                                        !mobile ||
+                                        !city ||
+                                        !state ||
+                                        !zip
+                                      ) {
+                                        toast.error("All fields are required!");
+                                        return;
+                                      }
+                                      const id = Date.now().toString();
+                                      const addressToAdd = {
+                                        ...newAddress,
+                                        _id: id,
+                                      };
+                                      setAddresses((prev) =>
+                                        prev
+                                          ? [...prev, addressToAdd]
+                                          : [addressToAdd]
+                                      );
+                                      setNewAddress({
+                                        name: "",
+                                        address: "",
+                                        mobile: "",
+                                        city: "",
+                                        state: "",
+                                        zip: "",
+                                      });
+                                      setIsAddressModalOpen(false);
+                                      toast.success(
+                                        "Address added successfully!"
+                                      );
+                                    }}
+                                    className="w-full"
+                                  >
+                                    Save Address
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Order summary for mobile view */}
+                {/* ---------------- MOBILE ORDER SUMMARY ---------------- */}
                 <div className="md:hidden fixed bottom-0 left-0 w-full bg-white pt-2">
                   <div className="bg-white p-4 rounded-lg border mx-4">
                     <h2 className="font-semibold">Order Summary</h2>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span>SubTotal</span>
-                          <PriceFormatter amount={getTotalPrice()} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Discount</span>
-                          <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} />
-                        </div>
-                        <Separator />
-                        <div className="flex items-center justify-between font-semibold text-lg">
-                          <span>Total</span>
-                          <PriceFormatter
-                            amount={getSubTotalPrice()}
-                            className="text-lg font-bold text-black"
-                          />
-                        </div>
-                        <Button
-                          className="w-full rounded-full font-semibold tracking-wide hoverEffect"
-                          size="lg"
-                          disabled={loading}
-  
-                        >
-                          {loading ? "Processing..." : "Proceed to Checkout"}
-                        </Button>
+                      <div className="flex items-center justify-between">
+                        <span>SubTotal</span>
+                        <PriceFormatter amount={getTotalPrice()} />
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span>Discount</span>
+                        <PriceFormatter
+                          amount={getTotalPrice() - getSubTotalPrice()}
+                        />
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between font-semibold text-lg">
+                        <span>Total</span>
+                        <PriceFormatter
+                          amount={getSubTotalPrice()}
+                          className="text-lg font-bold text-black"
+                        />
+                      </div>
+                      <Button
+                        className="w-full rounded-full font-semibold tracking-wide hoverEffect"
+                        size="lg"
+                        disabled={loading}
+                      >
+                        {loading ? "Processing..." : "Proceed to Checkout"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
