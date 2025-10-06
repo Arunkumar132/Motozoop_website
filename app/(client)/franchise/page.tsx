@@ -15,10 +15,11 @@ const FranchiseEnquiry = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
 
-    // Ensure only numeric input for investment field
     if (name === "investment") {
       if (value === "" || /^[0-9\b]+$/.test(value)) {
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -48,7 +49,6 @@ const FranchiseEnquiry = () => {
       return false;
     }
 
-    // Investment numeric validation
     if (isNaN(Number(investment))) {
       toast.error("Investment Capacity must be a numeric value.");
       return false;
@@ -73,7 +73,8 @@ const FranchiseEnquiry = () => {
         toast.success("Enquiry submitted successfully!");
         setFormData({ name: "", email: "", phone: "", location: "", investment: "", message: "" });
       } else {
-        toast.error("Error submitting enquiry. Please try again.");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Error submitting enquiry.");
       }
     } catch (error) {
       console.error(error);
@@ -84,77 +85,17 @@ const FranchiseEnquiry = () => {
   };
 
   return (
-    <div className=" border border-shop-dark_green w-full max-w-3xl mx-auto mt-3 mb-15 pt-16 pb-16 px-6 bg-white shadow-xl rounded-2xl sm:px-8">
+    <div className="border border-shop-dark_green w-full max-w-3xl mx-auto mt-3 mb-15 pt-16 pb-16 px-6 bg-white shadow-xl rounded-2xl sm:px-8">
       <Toaster position="top-right" />
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Franchise Enquiry</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* Name */}
-        <input
-          type="text"
-          name="name"
-          placeholder="Your Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Email */}
-        <input
-          type="email"
-          name="email"
-          placeholder="Your Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Phone */}
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone Number"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Location */}
-        <input
-          type="text"
-          name="location"
-          placeholder="Preferred Location"
-          value={formData.location}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Investment (numeric) */}
-        <input
-          type="text"
-          name="investment"
-          placeholder="Investment Capacity"
-          value={formData.investment}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Message (optional, spans full width) */}
-        <textarea
-          name="message"
-          placeholder="Message (optional)"
-          value={formData.message}
-          onChange={handleChange}
-          rows={4}
-          className="w-full md:col-span-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
-        />
-        {/* Submit Button spans full width */}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full md:col-span-2 py-3 rounded-lg text-white transition ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-shop_dark_green hover:bg-shop_btn_dark_green"
-          }`}
-        >
+        <input type="text" name="name" placeholder="Your Name" value={formData.name} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <input type="text" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <input type="text" name="location" placeholder="Preferred Location" value={formData.location} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <input type="text" name="investment" placeholder="Investment Capacity" value={formData.investment} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <textarea name="message" placeholder="Message (optional)" value={formData.message} onChange={handleChange} rows={4} className="w-full md:col-span-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"/>
+        <button type="submit" disabled={loading} className={`w-full md:col-span-2 py-3 rounded-lg text-white transition ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-shop_dark_green hover:bg-shop_btn_dark_green"}`}>
           {loading ? "Submitting..." : "Submit Enquiry"}
         </button>
       </form>

@@ -9,7 +9,7 @@ const HomeCategories = ({ categories }: { categories: Category[] }) => {
   return (
     <div className="bg-white border border-shop_light_green/20 my-10 md:my-16 p-5 lg:p-7 rounded-md">
       {/* Section Title */}
-      <Title className="border-b pb-3">Popular Categories</Title>
+      <Title className="border-b pb-3 ">Popular Categories</Title>
 
       {/* Category Grid */}
       <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 auto-rows-fr">
