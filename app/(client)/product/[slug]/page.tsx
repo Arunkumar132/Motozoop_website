@@ -11,6 +11,21 @@ import {FiShare2} from "react-icons/fi";
 import {RxBorderSplit} from "react-icons/rx";
 import {TbTruckDelivery} from "react-icons/tb";
 
+
+export default function DeliveryCheck() {
+  const [pin, setPin] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleCheck = () => {
+    // Simple Indian PIN code validation: 6 digits
+    const pinRegex = /^[1-9][0-9]{5}$/;
+    if (pinRegex.test(pin)) {
+      setMessage("✅ Yes! Delivery is available.");
+    } else {
+      setMessage("❌ Please enter a valid 6-digit PIN code.");
+    }
+  };
+
 const SingleProductPage = async ({
   params,
 }: {
@@ -75,17 +90,31 @@ const SingleProductPage = async ({
             </button>
         </div>
         <div className="flex flex-col w-100 gap-3.5 mt-2">
-          <div className="border border-darkColor/50 p-3 flex items-center gap-2.5">
-            <Truck size={30} className="text-shop_orange" />
-            <div>
-              <p className="text-base font-semibold text-black">
-                Free Delivery
-              </p>
-              <p className="text-base text-gray-500 underline underline-offset-2">
-                Enter the Postal Code for Delivery Availability.
-              </p>
-            </div>
-          </div>
+          <div className="border border-darkColor/50 p-3 flex flex-col md:flex-row items-start md:items-center gap-4">
+      <Truck size={30} className="text-shop_orange" />
+      <div className="flex-1">
+        <p className="text-base font-semibold text-black">Free Delivery</p>
+        <p className="text-base text-gray-500 underline underline-offset-2 mb-2">
+          Enter the Postal Code for Delivery Availability.
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            placeholder="Enter PIN code"
+            className="border p-2 rounded-md flex-1"
+          />
+          <button
+            onClick={handleCheck}
+            className="bg-shop_orange text-white px-4 py-2 rounded-md hover:bg-orange-600 transition"
+          >
+            Check
+          </button>
+        </div>
+        {message && <p className="mt-2 text-sm font-medium">{message}</p>}
+      </div>
+    </div>
           <div className="border border-darkColor/50 p-3 flex items-center gap-2.5">
             <CornerDownLeft size={30} className="text-shop_orange" />
             <div>
