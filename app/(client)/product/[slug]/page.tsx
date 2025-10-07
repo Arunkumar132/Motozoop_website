@@ -6,10 +6,6 @@ import PriceView from "@/components/PriceView";
 import { getProductBySlug } from "@/sanity/queries";
 import { CornerDownLeft, StarIcon } from "lucide-react";
 import React from "react";
-import { FaRegQuestionCircle } from "react-icons/fa";
-import { FiShare2 } from "react-icons/fi";
-import { RxBorderSplit } from "react-icons/rx";
-import { TbTruckDelivery } from "react-icons/tb";
 import ColorSelection from "@/components/ColorSelection";
 import StatueSelector from "@/components/StatueSelector";
 import DeliveryCheckWrapper from "@/components/DeliveryCheckWrapper";
@@ -70,14 +66,17 @@ const SingleProductPage = async ({ params }: Props) => {
         {hasColors && <ColorSelection colors={product.colors} />}
         {hasStatues && <StatueSelector statues={product.statues} />}
 
-        {/* Cart & Favorite */}
-        <div className="flex items-center gap-2.5 lg:gap-5">
-          <AddToCartButton product={product} />
-          <FavoriteButton showProduct={true} product={product} />
-        </div>
-
-        <div className="mt-0 w-full">
-          <BuyNow product={product} />
+        {/* Buttons: Add to Cart, Buy Now, Favorite */}
+        <div className="flex items-center justify-start gap-4 w-full">
+          <div className="flex-1 h-12">
+            <AddToCartButton product={product} className="w-full h-full text-base" />
+          </div>
+          <div className="flex-1 h-12">
+            <BuyNow product={product} className="w-full h-full text-base" />
+          </div>
+          <div className="h-12 w-12 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition">
+            <FavoriteButton showProduct={true} product={product} iconSize={24} />
+          </div>
         </div>
 
         {/* Delivery & Return Sections */}

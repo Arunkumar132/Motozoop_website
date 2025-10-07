@@ -36,7 +36,7 @@ const BuyNow: React.FC<BuyNowProps> = ({ product }) => {
     <div className="flex flex-col w-full gap-2"> {/* Stack buttons with minimal gap */}
       <button
         onClick={handleBuyNow}
-        className="w-full flex items-center justify-center gap-3 bg-shop_orange hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition duration-200"
+        className="w-full h-12 flex items-center justify-center gap-3 bg-shop_orange hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition duration-200"
       >
         <ShoppingBag size={20} />
         <span className="text-lg font-semibold">Buy Now</span>
