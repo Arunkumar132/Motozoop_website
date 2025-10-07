@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Container from "./Container";
 import FooterTop from "./FooterTop";
 import Logo from "./Logo";
@@ -10,33 +10,76 @@ import { categoriesData, quickLinksData } from "@/constants/data";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { toast } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) {
+      toast.error("Please enter your email address.", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address.", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Simulated backend call — replace this with an actual API endpoint later
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    setIsLoading(false);
+    toast.success("You are now subscribed to Motozoop's newsletter!", {
+      position: "bottom-right",
+    });
+    setEmail("");
+  };
+
   return (
-    <footer className="bg-white border-t">
+    <footer className="bg-white border-t border-gray-200">
       <Container>
         <FooterTop />
+
+        {/* Main Footer Grid */}
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* Logo + Tagline + Social */}
-          <div className="space-y-4">
+          {/* Brand Section */}
+          <div className="space-y-5">
             <Logo />
-            <SubText>Motozoop Car is your Second home</SubText>
+            <SubText className="text-gray-600">
+              Motozoop Car — Your second home on the road.
+            </SubText>
             <SocialMedia
-              className="text-darkColor/60"
-              iconClassName="border-darkColor/60 hover:border-shop_LIGHT_green hover:text-shop_LIGHT_green"
+              className="text-gray-600"
+              iconClassName="border-gray-600 hover:border-shop_light_green hover:text-shop_light_green transition-colors"
               tooltipClassName="bg-darkColor text-white"
             />
           </div>
 
           {/* Quick Links */}
           <div>
-            <SubTitle>Quick Links</SubTitle>
-            <ul className="space-y-2 mt-3">
+            <SubTitle className="text-darkColor font-semibold">
+              Quick Links
+            </SubTitle>
+            <ul className="space-y-2 mt-4">
               {quickLinksData?.map((item) => (
                 <li key={item?.title}>
                   <Link
                     href={item?.href}
-                    className="text-sm text-gray-500 hover:text-shop_light_green hoverEffect"
+                    className="text-sm text-gray-500 hover:text-shop_light_green transition-colors"
                   >
                     {item?.title}
                   </Link>
@@ -47,13 +90,15 @@ const Footer = () => {
 
           {/* Categories */}
           <div>
-            <SubTitle>Categories</SubTitle>
-            <ul className="space-y-3 mt-4">
+            <SubTitle className="text-darkColor font-semibold">
+              Categories
+            </SubTitle>
+            <ul className="space-y-2 mt-4">
               {categoriesData?.map((item) => (
                 <li key={item?.title}>
                   <Link
                     href={`/category/${item?.href}`}
-                    className="text-sm text-gray-500 hover:text-shop_light_green hoverEffect hoverEffect" 
+                    className="text-sm text-gray-500 hover:text-shop_light_green transition-colors"
                   >
                     {item?.title}
                   </Link>
@@ -62,36 +107,57 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className ="space-y-4">
-            <SubTitle>Newsletter</SubTitle>
-            <SubText> Subscribe to our newsletter to recieve updates and exclusive offers</SubText>
-            <form className="space-y-3">
-              <Input placeholder="Enter your email" type="email" required/>
-              <Button className="w-full">Subscribe</Button> 
+          {/* Newsletter */}
+          <div className="space-y-4">
+            <SubTitle className="text-darkColor font-semibold">
+              Newsletter
+            </SubTitle>
+            <SubText className="text-gray-600">
+              Subscribe to receive updates and exclusive offers directly in your
+              inbox.
+            </SubText>
+
+            <form onSubmit={handleSubscribe} className="space-y-3">
+              <Input
+                placeholder="Enter your email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="rounded-lg border-gray-300 focus:ring-shop_light_green focus:border-shop_light_green"
+              />
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full bg-shop_dark_green hover:bg-shop_dark_green/90 transition-all flex items-center justify-center ${
+                  isLoading ? "opacity-80 cursor-not-allowed" : ""
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Subscribing...
+                  </>
+                ) : (
+                  "Subscribe"
+                )}
+              </Button>
             </form>
           </div>
         </div>
-        <div className="py-6 border-t text-center text-sm text-gray-600">
-         <div>
-            © {new Date().getFullYear()}{" "}
-            <Logo  className="text-sm"/>
-            . All rights reserved.
+
+        {/* Footer Bottom */}
+        <div className="py-6 border-t border-gray-200 text-center text-sm text-gray-600">
+          <div className="flex justify-center items-center gap-1 flex-wrap">
+            <span>© {new Date().getFullYear()}</span>
+            <Logo className="inline w-20" />
+            <span>All rights reserved.</span>
           </div>
         </div>
-
       </Container>
     </footer>
   );
 };
 
 export default Footer;
-
-
-
-
-
-
-
-
-
-

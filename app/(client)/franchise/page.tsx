@@ -76,10 +76,10 @@ const FranchiseEnquiry = () => {
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
 
       {/* Intro Message Outside Box */}
-      <div className="mb-4 text-left">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Franchise Enquiry</h2>
+      <div className="mb-6 text-left">
+        <h2 className="text-3xl font-bold text-gray-800 mb-4 mt-4">Franchise Enquiry</h2>
         <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-1">
-          Join <span className="font-semibold">MotoZoop</span>, one of the leading car interior and exterior
+          Join <span className="font-semibold text-shop_light_green">MotoZoop</span>, one of the leading car interior and exterior
           accessories brands, and become part of a growing network of passionate automotive entrepreneurs.
         </p>
         <p className="text-gray-700 text-base md:text-lg leading-relaxed">
