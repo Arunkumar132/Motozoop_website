@@ -26,7 +26,7 @@ const AboutPage = () => {
           </h1>
 
           <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-4">
-            Welcome to <span className="font-semibold">MotoZoop</span>, your
+            Welcome to <span className="font-semibold text-shop_light_green">MotoZoop</span>, your
             ultimate destination for all things automotive! We’re not just
             another car accessories store — we’re a passionate community of
             gearheads and car enthusiasts dedicated to bringing you the latest

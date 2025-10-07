@@ -140,22 +140,6 @@ const BlogLeft = async ({ slug }: { slug: string }) => {
 
   return (
     <div>
-      {/* Blog Categories 
-      <div className="border border-lightColor p-5 rounded-md">
-        <Title className="text-base">Blog Categories</Title>
-        <div className="space-y-2 mt-2">
-          {categories?.map((blogcategories, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center text-lightColor/90 text-sm py-2 border-b last:border-b-0 hover:text-shop_dark_green hover:font-semibold cursor-pointer"
-            >
-              <p>{category?.title}</p>
-              <p className="text-darkColor font-semibold">{`(${category?.blogCount || 0})`}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-      */}
       {/* Latest Blogs */}
       <div className="border border-lightColor p-5 rounded-md mt-10">
         <p className="text-xl font-semibold text-shop_dark_green">Latest Blogs</p>
