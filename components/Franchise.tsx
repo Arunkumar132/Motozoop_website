@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
+import { FaStar, FaHandsHelping, FaChartLine, FaShieldAlt } from "react-icons/fa";
 
 const FranchiseEnquiry = () => {
   const [formData, setFormData] = useState({
@@ -72,11 +73,50 @@ const FranchiseEnquiry = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 pb-10 md:pb-16 bg-white shadow-xl rounded-2xl mt-8 sm:mt-10 sm:p-8">
+    <div className="w-full max-w-4xl mx-auto p-6 pb-10 md:pb-16 bg-white shadow-xl rounded-2xl mt-8 sm:mt-10 sm:p-8">
       <Toaster position="top-right" />
-      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Franchise Enquiry</h2>
+
+      {/* Intro Message */}
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-3">Franchise Enquiry</h2>
+        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+          Join <span className="font-semibold">MotoZoop</span>, one of the leading car interior and exterior
+          accessories brands, and become part of a growing network of passionate automotive entrepreneurs.
+        </p>
+        <p className="text-gray-700 text-base md:text-lg leading-relaxed mt-2">
+          Our franchise offers a proven business model, high-quality products, marketing support, and training programs to help you succeed in the automotive market.
+        </p>
+      </div>
+
+      {/* Why Choose Our Franchise */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10 text-center">
+        <div className="p-4 border rounded-xl shadow-sm hover:shadow-md transition">
+          <FaStar className="text-shop_dark_green w-10 h-10 mx-auto mb-2" />
+          <h3 className="font-semibold text-gray-800 mb-1">Proven Brand</h3>
+          <p className="text-gray-600 text-sm">Leverage our trusted and recognized brand to attract customers quickly.</p>
+        </div>
+
+        <div className="p-4 border rounded-xl shadow-sm hover:shadow-md transition">
+          <FaHandsHelping className="text-shop_dark_green w-10 h-10 mx-auto mb-2" />
+          <h3 className="font-semibold text-gray-800 mb-1">Full Support</h3>
+          <p className="text-gray-600 text-sm">We provide marketing, training, and operational guidance to ensure your success.</p>
+        </div>
+
+        <div className="p-4 border rounded-xl shadow-sm hover:shadow-md transition">
+          <FaChartLine className="text-shop_dark_green w-10 h-10 mx-auto mb-2" />
+          <h3 className="font-semibold text-gray-800 mb-1">High Profit Potential</h3>
+          <p className="text-gray-600 text-sm">A proven business model with attractive returns in the booming automotive accessories market.</p>
+        </div>
+
+        <div className="p-4 border rounded-xl shadow-sm hover:shadow-md transition">
+          <FaShieldAlt className="text-shop_dark_green w-10 h-10 mx-auto mb-2" />
+          <h3 className="font-semibold text-gray-800 mb-1">Trusted Quality</h3>
+          <p className="text-gray-600 text-sm">Offer premium products with rigorous quality checks that customers trust.</p>
+        </div>
+      </section>
+
+      {/* Form */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* Name */}
         <input
           type="text"
           name="name"
@@ -86,7 +126,6 @@ const FranchiseEnquiry = () => {
           required
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Email */}
         <input
           type="email"
           name="email"
@@ -96,7 +135,6 @@ const FranchiseEnquiry = () => {
           required
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Phone */}
         <input
           type="text"
           name="phone"
@@ -106,7 +144,6 @@ const FranchiseEnquiry = () => {
           required
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Location */}
         <input
           type="text"
           name="location"
@@ -115,7 +152,6 @@ const FranchiseEnquiry = () => {
           onChange={handleChange}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Investment */}
         <input
           type="text"
           name="investment"
@@ -124,7 +160,6 @@ const FranchiseEnquiry = () => {
           onChange={handleChange}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Message spans full width */}
         <textarea
           name="message"
           placeholder="Message (optional)"
@@ -133,7 +168,6 @@ const FranchiseEnquiry = () => {
           rows={4}
           className="w-full md:col-span-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
         />
-        {/* Submit Button spans full width */}
         <button
           type="submit"
           disabled={loading}
