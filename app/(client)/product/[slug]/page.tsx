@@ -14,6 +14,7 @@ import ColorSelection from "@/components/ColorSelection";
 import StatueSelector from "@/components/StatueSelector";
 import DeliveryCheckWrapper from "@/components/DeliveryCheckWrapper";
 import ReturnModal from "@/components/ReturnModal";
+import BuyNow from "@/components/BuyNow";
 
 interface Props {
   params: { slug: string };
@@ -75,24 +76,8 @@ const SingleProductPage = async ({ params }: Props) => {
           <FavoriteButton showProduct={true} product={product} />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-7.5 border-b border-b-gray-200 py-5 -mt-2">
-          <button className="flex items-center gap-2 text-sm text-black hover:text-red-600 hoverEffect">
-            <RxBorderSplit className="text-lg" />
-            <p>Compare Color</p>
-          </button>
-          <button className="flex items-center gap-2 text-sm text-black hover:text-green-600 hoverEffect">
-            <FaRegQuestionCircle className="text-lg" />
-            <p>Ask a Question</p>
-          </button>
-          <button className="flex items-center gap-2 text-sm text-black hover:text-blue-600 hoverEffect">
-            <TbTruckDelivery className="text-lg" />
-            <p>Delivery & Return</p>
-          </button>
-          <button className="flex items-center gap-2 text-sm text-black hover:text-yellow-600 hoverEffect">
-            <FiShare2 className="text-lg" />
-            <p>Share</p>
-          </button>
+        <div className="mt-0 w-full">
+          <BuyNow product={product} />
         </div>
 
         {/* Delivery & Return Sections */}
