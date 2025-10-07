@@ -9,6 +9,7 @@ import { brandType } from './brandTypes';
 import { productType } from './productType';
 import { orderType } from './orderType';
 import { franchise } from './franchise';
+import { messageType } from './message';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -22,5 +23,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     authorType,
     addressType,
     franchise,
+    messageType,
   ],
 }
