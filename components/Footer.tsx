@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { toast } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
+
 import Container from "./Container";
 import FooterTop from "./FooterTop";
 import Logo from "./Logo";
 import SocialMedia from "./SocialMedia";
 import { SubText, SubTitle } from "./Title";
 import { categoriesData, quickLinksData } from "@/constants/data";
-import Link from "next/link";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { toast } from "react-hot-toast";
-import { Loader2 } from "lucide-react";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -26,6 +27,7 @@ const Footer = () => {
     if (!email) {
       toast.error("Please enter your email address.", {
         position: "bottom-right",
+        style: { background: "#1F2937", color: "#fff" },
       });
       return;
     }
@@ -33,18 +35,20 @@ const Footer = () => {
     if (!validateEmail(email)) {
       toast.error("Please enter a valid email address.", {
         position: "bottom-right",
+        style: { background: "#1F2937", color: "#fff" },
       });
       return;
     }
 
     setIsLoading(true);
 
-    // Simulated backend call — replace this with an actual API endpoint later
+    // Simulated backend call
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     setIsLoading(false);
     toast.success("You are now subscribed to Motozoop's newsletter!", {
       position: "bottom-right",
+      style: { background: "#1F2937", color: "#fff" },
     });
     setEmail("");
   };
@@ -56,6 +60,7 @@ const Footer = () => {
 
         {/* Main Footer Grid */}
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+          
           {/* Brand Section */}
           <div className="space-y-5">
             <Logo />
@@ -109,12 +114,9 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div className="space-y-4">
-            <SubTitle className="text-darkColor font-semibold">
-              Newsletter
-            </SubTitle>
+            <SubTitle className="text-darkColor font-semibold">Newsletter</SubTitle>
             <SubText className="text-gray-600">
-              Subscribe to receive updates and exclusive offers directly in your
-              inbox.
+              Subscribe to receive updates and exclusive offers directly in your inbox.
             </SubText>
 
             <form onSubmit={handleSubscribe} className="space-y-3">
@@ -126,7 +128,6 @@ const Footer = () => {
                 required
                 className="rounded-lg border-gray-300 focus:ring-shop_light_green focus:border-shop_light_green"
               />
-
               <Button
                 type="submit"
                 disabled={isLoading}
@@ -149,10 +150,11 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="py-6 border-t border-gray-200 text-center text-sm text-gray-600">
-          <div className="flex justify-center items-center gap-1 flex-wrap">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
             <span>© {new Date().getFullYear()}</span>
-            <Logo className="inline w-20" />
-            <span>All rights reserved.</span>
+            <div className="flex justify-center items-center gap-2">
+              <span>Motozoop - All rights reserved.</span>
+            </div>
           </div>
         </div>
       </Container>

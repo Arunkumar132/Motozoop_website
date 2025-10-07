@@ -5,7 +5,7 @@ import EmptyCart from "@/components/EmptyCart";
 import NoAccessToCart from "@/components/NoAccessToCart";
 import { Address } from "@/sanity.types";
 import useStore from "@/store";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { Title } from "@/components/Title";
 import { ShoppingBag, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -47,6 +47,7 @@ const CartPage = () => {
   const { deleteCartProduct, getTotalPrice, getItemCount, getSubTotalPrice, resetCart } = useStore();
   const groupedItems = useStore((state) => state.getGroupedItems());
   const { isSignedIn } = useAuth();
+  const { user } = useUser(); 
 
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[] | null>(null);
@@ -93,6 +94,32 @@ const CartPage = () => {
       toast.success("Cart has been reset");
     }
   };
+
+
+  //handle Checkout 
+  const handleCheckout = () => {
+    setLoading(true);
+    try {
+      const metadata = {
+        orderNumber: crypto.randomUUID(), // ✅ generates a unique order ID
+        customerName: user?.fullName ?? "Unknown",
+        customerEmail: user?.emailAddresses?.[0]?.emailAddress ?? "Unknown",
+        clerkUserId: user?.id ?? "Unknown",
+        address: selectedAddress ?? {},
+      };
+
+      console.log("Checkout metadata:", metadata);
+
+      // TODO: send metadata to your backend or Razorpay checkout handler
+      // await createCheckoutSession(metadata);
+
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // Add address
   const addAddressToSanity = async (addressData: any) => {
@@ -259,7 +286,11 @@ const CartPage = () => {
                           <span>Total</span>
                           <PriceFormatter amount={getSubTotalPrice()} className="text-lg font-bold text-black"/>
                         </div>
-                        <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" size="lg" disabled={loading}>
+                        <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" 
+                          size="lg" 
+                          disabled={loading}
+                          onClick={handleCheckout}
+                        >
                           {loading ? "Processing..." : "Proceed to Checkout"}
                         </Button>
                       </div>
@@ -355,13 +386,7 @@ const CartPage = () => {
                   className="w-full rounded-full font-semibold tracking-wide"
                   size="lg"
                   disabled={loading}
-                  onClick={() => {
-                    if (!selectedAddress) {
-                      toast.error("Please select a delivery address!");
-                      return;
-                    }
-                    window.location.href = "/checkout";
-                  }}
+                  onClick={handleCheckout}
                 >
                   {loading ? "Processing..." : "Proceed to Checkout"}
                 </Button>
