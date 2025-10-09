@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { createCheckoutSession, Metadata } from "@/actions/createCheckoutSession";
 
 const CartPage = () => {
   const { deleteCartProduct, getTotalPrice, getItemCount, getSubTotalPrice, resetCart } = useStore();
@@ -96,29 +97,101 @@ const CartPage = () => {
   };
 
 
-  //handle Checkout 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error("Please login to continue");
+      return;
+    }
+
+    if (!selectedAddress) {
+      toast.error("Please select a shipping address");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const metadata = {
-        orderNumber: crypto.randomUUID(), // ✅ generates a unique order ID
-        customerName: user?.fullName ?? "Unknown",
-        customerEmail: user?.emailAddresses?.[0]?.emailAddress ?? "Unknown",
-        clerkUserId: user?.id ?? "Unknown",
-        address: selectedAddress ?? {},
+      const metadata: Metadata = {
+        orderNumber: crypto.randomUUID(),
+        customerName: user.fullName ?? "Unknown",
+        customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
+        clerkUserId: user.id,
+        address: selectedAddress,
       };
 
-      console.log("Checkout metadata:", metadata);
+      // Create Razorpay order via backend
+      const res = await fetch("/api/razorpay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: groupedItems,
+          metadata,
+          amount: getSubTotalPrice(), // total price here
+        }),
+      });
 
-      // TODO: send metadata to your backend or Razorpay checkout handler
-      // await createCheckoutSession(metadata);
+      const data = await res.json();
 
+      if (!res.ok) throw new Error(data.error || "Failed to create order");
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Motozoop",
+        description: "Order Payment",
+        order_id: data.orderId,
+        handler: async function (response: any) {
+          // Verify payment on the server
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response),
+            });
+
+            const result = await verifyRes.json();
+            if (result.valid) {
+              toast.success(`Payment successful! ID: ${response.razorpay_payment_id}`);
+              window.location.href = `/success?orderNumber=${metadata.orderNumber}`;
+            } else {
+              toast.error("Payment verification failed. Try again.");
+            }
+          } catch (err) {
+            toast.error("Payment verification failed. Try again.");
+          }
+        },
+        prefill: {
+          name: metadata.customerName,
+          email: metadata.customerEmail,
+        },
+        theme: { color: "#3399cc" },
+        modal: {
+          ondismiss: function () {
+            // Triggered when modal closed without payment
+            toast.error("Payment canceled. Try again.");
+          },
+        },
+        method: {
+          card: true,
+          netbanking: true,
+          upi: true,
+          wallet: false,
+          emi: false,
+          paylater: false,
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
     } catch (error) {
-      console.error("Error creating checkout session:", error);
+      console.error("Error during checkout:", error);
+      toast.error("Payment initiation failed. Try again.");
     } finally {
       setLoading(false);
     }
   };
+
 
 
   // Add address
@@ -286,13 +359,15 @@ const CartPage = () => {
                           <span>Total</span>
                           <PriceFormatter amount={getSubTotalPrice()} className="text-lg font-bold text-black"/>
                         </div>
-                        <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" 
-                          size="lg" 
-                          disabled={loading}
-                          onClick={handleCheckout}
-                        >
-                          {loading ? "Processing..." : "Proceed to Checkout"}
-                        </Button>
+                        <div>
+                          <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" 
+                            size="lg" 
+                            disabled={loading}
+                            onClick={handleCheckout}
+                          >
+                            {loading ? "Processing..." : "Proceed to Checkout"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
