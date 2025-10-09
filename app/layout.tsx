@@ -11,7 +11,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Motozoop",
+  title: "Admin",
   description: "Online automotive store – Shop quality auto parts and accessories",
 };
 

@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: {
-    default: "Shopping car accessories",
+    default: "Motozoop",
     template: "%s | MotoZoop",
   },
   description:

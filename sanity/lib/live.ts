@@ -5,7 +5,7 @@ import { client } from "./client";
 
 const token = process.env.SANITY_API_WRITE_TOKEN;
 if (!token) {
-  throw new Error("SANITY_API_READ_TOKEN is not set");
+  throw new Error("SANITY_API_WRITE_TOKEN is not set");
 }
 
 export const { sanityFetch, SanityLive } = defineLive({
