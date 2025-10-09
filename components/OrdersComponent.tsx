@@ -13,13 +13,32 @@ import PriceFormatter from "./PriceFormatter";
 import { format } from "date-fns";
 import { X } from "lucide-react";
 
+const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
 
-const OrdersComponent = ({ orders }: {orders:MY_ORDERS_QUERYResult}) => {
+  const handleOrderClick = (order: any) => {
+    // Implement your order details click logic here
+    console.log("Order clicked:", order);
+  };
+
+  const handleDelete = (order: any) => {
+    // Implement your delete logic here
+    console.log("Delete order:", order);
+  };
+
+  // Sort orders by orderDate descending (latest first)
+  const sortedOrders = Array.isArray(orders)
+    ? [...orders].sort((a, b) => {
+        const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 0;
+        const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 0;
+        return dateB - dateA; // latest orders first
+      })
+    : [];
+
   return (
     <TableBody>
       <TooltipProvider>
-        {Array.isArray(orders) && orders.length > 0 ? (
-          orders.map((order) => (
+        {sortedOrders.length > 0 ? (
+          sortedOrders.map((order) => (
             <Tooltip key={order?.orderNumber}>
               <TooltipTrigger asChild>
                 <TableRow
@@ -28,9 +47,7 @@ const OrdersComponent = ({ orders }: {orders:MY_ORDERS_QUERYResult}) => {
                 >
                   {/* Order Number */}
                   <TableCell className="font-medium">
-                    {order?.orderNumber
-                      ? `${order.orderNumber.slice(-10)}...`
-                      : "NA"}
+                    {order?.orderNumber ?? "NA"}
                   </TableCell>
 
                   {/* Order Date */}
@@ -83,8 +100,8 @@ const OrdersComponent = ({ orders }: {orders:MY_ORDERS_QUERYResult}) => {
                   <TableCell
                     className="flex items-center justify-center group"
                     onClick={(event) => {
-                    event.stopPropagation();
-                    handleDelete(order);
+                      event.stopPropagation();
+                      handleDelete(order);
                     }}
                   >
                     <X

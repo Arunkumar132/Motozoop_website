@@ -1,4 +1,4 @@
-import { BracketsIcon } from "lucide-react"; // Correct icon import
+import { BracketsIcon } from "lucide-react";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
 export const orderType = defineType({
@@ -11,7 +11,7 @@ export const orderType = defineType({
       name: "orderNumber",
       title: "Order Number",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "invoice",
@@ -20,50 +20,54 @@ export const orderType = defineType({
       fields: [
         defineField({ name: "id", title: "ID", type: "string" }),
         defineField({ name: "number", title: "Number", type: "string" }),
-        defineField({ name: "hosted_invoice_url", title: "Hosted Invoice URL", type: "url" }),
+        defineField({
+          name: "hosted_invoice_url",
+          title: "Hosted Invoice URL",
+          type: "url",
+        }),
       ],
     }),
     defineField({
       name: "razorpayOrderId",
       title: "Razorpay Order ID",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "razorpayPaymentId",
       title: "Razorpay Payment ID",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "razorpaySignature",
       title: "Razorpay Signature",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "clerkUserId",
       title: "Store User ID",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "customerName",
       title: "Customer Name",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "phoneNumber",
       title: "Phone Number",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "email",
       title: "Customer Email",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "products",
@@ -83,7 +87,7 @@ export const orderType = defineType({
               name: "quantity",
               title: "Quantity Purchased",
               type: "number",
-              validation: Rule => Rule.required().min(1),
+              validation: (Rule) => Rule.required().min(1),
             }),
           ],
           preview: {
@@ -112,13 +116,13 @@ export const orderType = defineType({
       name: "totalPrice",
       title: "Total Price",
       type: "number",
-      validation: Rule => Rule.required().min(0),
+      validation: (Rule) => Rule.required().min(0),
     }),
     defineField({
       name: "amountDiscount",
       title: "Amount Discount",
       type: "number",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "address",
@@ -130,6 +134,17 @@ export const orderType = defineType({
         defineField({ name: "city", title: "City", type: "string" }),
         defineField({ name: "address", title: "Address", type: "string" }),
         defineField({ name: "name", title: "Name", type: "string" }),
+        defineField({
+          name: "mobile",
+          title: "Mobile Number",
+          type: "string",
+          validation: (Rule) =>
+            Rule.regex(/^[0-9]{10}$/, {
+              name: "mobile",
+              invert: false,
+              message: "Enter a valid 10-digit mobile number",
+            }),
+        }),
       ],
     }),
     defineField({
@@ -154,7 +169,7 @@ export const orderType = defineType({
       name: "orderDate",
       title: "Order Date",
       type: "datetime",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {

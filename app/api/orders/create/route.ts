@@ -6,53 +6,77 @@ import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    const { payment, metadata, items, totalPrice, invoiceId, invoiceNumber, hostedInvoiceUrl } = await req.json();
+    const { payment, metadata, items, totalPrice } = await req.json();
 
-    if (!payment || !metadata || !items) {
-      return NextResponse.json({ error: "Missing payment, metadata, or items" }, { status: 400 });
+    // --- Validation ---
+    if (!payment || !metadata || !items?.length) {
+      return NextResponse.json(
+        { error: "Missing payment, metadata, or items" },
+        { status: 400 }
+      );
     }
 
-    // Prepare products for Sanity
+    // --- Generate unique order number ---
+    const generateOrderNumber = () => {
+      const letters = Array.from({ length: 5 }, () =>
+        String.fromCharCode(65 + Math.floor(Math.random() * 26))
+      ).join("");
+      const digits = Math.floor(100 + Math.random() * 900); // 3 digits
+      return `${letters}${digits}`;
+    };
+
+    const orderNumber = metadata.orderNumber ?? generateOrderNumber();
+
+    // --- Prepare products for Sanity ---
     const sanityProducts = items.map((item: any) => ({
       _key: crypto.randomUUID(),
-      product: item.product,
+      product: item.product, // Expecting _type: "reference", _ref: productId
       quantity: item.quantity,
       productName: item.productName,
       productImage: item.productImage,
-      discountedPrice: item.discountedPrice ?? item.price,
+      discountedPrice:
+        item.discountedPrice ??
+        item.product?.discountedPrice ??
+        item.product?.price ??
+        0,
     }));
 
-    // Map phone number from address form
-    const parsedAddress = metadata.address || null;
-    const phoneNumber = parsedAddress?.mobile || "";
+    // --- Parse address ---
+    const parsedAddress = metadata.address ?? {};
+    const phoneNumber = parsedAddress.mobile ?? "";
 
-    // Use totalPrice from client/cart if available
-    const orderTotalPrice = totalPrice ?? sanityProducts.reduce((sum, item) => sum + (item.discountedPrice ?? 0) * item.quantity, 0);
+    // --- Compute total price ---
+    const orderTotalPrice =
+      totalPrice ??
+      sanityProducts.reduce(
+        (sum, item) => sum + (item.discountedPrice ?? 0) * (item.quantity ?? 1),
+        0
+      );
 
-    // Create order in Sanity
+    // --- Create order in Sanity ---
     const order = await backendClient.create({
       _type: "order",
-      orderNumber: metadata.orderNumber,
+      orderNumber,
       razorpayPaymentId: payment.razorpay_payment_id,
       razorpayOrderId: payment.razorpay_order_id,
-      razorpaySignature: payment.razorpay_signature || "",
-      customerName: metadata.customerName,
+      razorpaySignature: payment.razorpay_signature ?? "",
+      customerName: metadata.customerName ?? "Unknown",
       phoneNumber,
-      email: metadata.customerEmail,
-      clerkUserId: metadata.clerkUserId,
+      email: metadata.customerEmail ?? "",
+      clerkUserId: metadata.clerkUserId ?? "",
       products: sanityProducts,
-      totalPrice: metadata.totalPrice ?? 0,
+      totalPrice: metadata.totalPrice ?? orderTotalPrice,
       amountDiscount: metadata.amountDiscount ?? 0,
       status: "paid",
       orderDate: new Date().toISOString(),
       address: parsedAddress
         ? {
-            state: parsedAddress.state,
-            zip: parsedAddress.zip,
-            city: parsedAddress.city,
-            address: parsedAddress.address,
-            name: parsedAddress.name,
-            mobile: parsedAddress.mobile,
+            name: parsedAddress.name ?? "",
+            address: parsedAddress.address ?? "",
+            city: parsedAddress.city ?? "",
+            state: parsedAddress.state ?? "",
+            zip: parsedAddress.zip ?? "",
+            mobile: parsedAddress.mobile ?? "",
           }
         : null,
       invoiceId: "",
@@ -60,25 +84,61 @@ export async function POST(req: NextRequest) {
       hostedInvoiceUrl: "",
     });
 
-    // ✅ Update stock levels
+    console.log(`✅ Order created successfully: ${order._id}`);
+
+    // --- Update stock levels ---
     await Promise.all(
       items.map(async (item: any) => {
         try {
-          const productDoc = await backendClient.getDocument(item._id);
-          if (!productDoc || typeof productDoc.stock !== "number") return;
+          // Correct way to get product ID from reference
+          const productId = item.product?._ref || item._id;
+          if (!productId) {
+            console.warn("⚠️ No valid product ID found for item:", item);
+            return;
+          }
 
-          const newStock = Math.max(productDoc.stock - item.quantity, 0);
-          await backendClient.patch(item._id).set({ stock: newStock }).commit();
-          console.log(`Stock updated for product ${item._id}: ${newStock}`);
-        } catch (err) {
-          console.error(`Failed to update stock for ${item._id}:`, err);
+          // Fetch current stock from Sanity
+          const productDoc = await backendClient.fetch(
+            `*[_type == "product" && _id == $id][0]{ _id, title, stock }`,
+            { id: productId }
+          );
+
+          if (!productDoc) {
+            console.warn(`⚠️ Product not found for ID: ${productId}`);
+            return;
+          }
+
+          if (typeof productDoc.stock !== "number") {
+            console.warn(`⚠️ Invalid stock field for product ${productId}`);
+            return;
+          }
+
+          // Calculate new stock
+          const newStock = Math.max(productDoc.stock - (item.quantity ?? 1), 0);
+
+          // Update stock in Sanity
+          await backendClient
+            .patch(productId)
+            .set({ stock: newStock })
+            .commit({ autoGenerateArrayKeys: true });
+
+          console.log(
+            `✅ Stock updated for "${productDoc.title}" (${productId}): ${productDoc.stock} → ${newStock}`
+          );
+        } catch (err: any) {
+          console.error(
+            `❌ Failed to update stock for product ${item.product?._ref || "unknown"}: ${err.message}`
+          );
         }
       })
     );
 
     return NextResponse.json({ success: true, orderId: order._id });
-  } catch (err) {
-    console.error("Failed to create order in Sanity:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  } catch (err: any) {
+    console.error("❌ Failed to create order in Sanity:", err);
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

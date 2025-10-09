@@ -131,9 +131,17 @@ const CartPage = () => {
     const totalPrice = getSubTotalPrice();      // after discount
     const amountDiscount = originalPrice - totalPrice;
 
+    function generateOrderNumber() {
+      const letters = Array.from({ length: 5 }, () =>
+        String.fromCharCode(65 + Math.floor(Math.random() * 26))
+      ).join("");
+      const digits = Math.floor(100 + Math.random() * 900); // 3-digit number between 100–999
+      return `${letters}${digits}`;
+    }
+
     // Build metadata
     const metadata: Metadata = {
-      orderNumber: crypto.randomUUID(),
+      orderNumber: generateOrderNumber(),
       customerName: user.fullName ?? "Unknown",
       customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
       clerkUserId: user.id,
