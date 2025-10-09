@@ -97,100 +97,190 @@ const CartPage = () => {
   };
 
 
-  const handleCheckout = async () => {
-    if (!user) {
-      toast.error("Please login to continue");
-      return;
-    }
+// Helper: load Razorpay checkout script (add near top of file)
+const loadRazorpayScript = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("window is undefined"));
+    if ((window as any).Razorpay) return resolve();
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
+    document.body.appendChild(script);
+  });
 
-    if (!selectedAddress) {
-      toast.error("Please select a shipping address");
-      return;
-    }
+/* Replace your existing handleCheckout with this function */
+const handleCheckout = async () => {
+  if (!user) {
+    toast.error("Please login to continue");
+    return;
+  }
 
-    setLoading(true);
+  if (!selectedAddress) {
+    toast.error("Please select a shipping address");
+    return;
+  }
 
-    try {
-      const metadata: Metadata = {
-        orderNumber: crypto.randomUUID(),
-        customerName: user.fullName ?? "Unknown",
-        customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
-        clerkUserId: user.id,
-        address: selectedAddress,
-      };
+  setLoading(true);
 
-      // Create Razorpay order via backend
-      const res = await fetch("/api/razorpay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: groupedItems,
-          metadata,
-          amount: getSubTotalPrice(), // total price here
-        }),
-      });
+  // Guards to prevent continuation after cancel/failure
+  let modalDismissed = false;
+  let paymentHandled = false;
 
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to create order");
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        amount: data.amount,
-        currency: data.currency,
-        name: "Motozoop",
-        description: "Order Payment",
-        order_id: data.orderId,
-        handler: async function (response: any) {
-          // Verify payment on the server
-          try {
-            const verifyRes = await fetch("/api/razorpay/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(response),
-            });
-
-            const result = await verifyRes.json();
-            if (result.valid) {
-              toast.success(`Payment successful! ID: ${response.razorpay_payment_id}`);
-              window.location.href = `/success?orderNumber=${metadata.orderNumber}`;
-            } else {
-              toast.error("Payment verification failed. Try again.");
-            }
-          } catch (err) {
-            toast.error("Payment verification failed. Try again.");
-          }
-        },
-        prefill: {
-          name: metadata.customerName,
-          email: metadata.customerEmail,
-        },
-        theme: { color: "#3399cc" },
-        modal: {
-          ondismiss: function () {
-            // Triggered when modal closed without payment
-            toast.error("Payment canceled. Try again.");
-          },
-        },
-        method: {
-          card: true,
-          netbanking: true,
-          upi: true,
-          wallet: false,
-          emi: false,
-          paylater: false,
-        },
-      };
-
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error("Error during checkout:", error);
-      toast.error("Payment initiation failed. Try again.");
-    } finally {
-      setLoading(false);
-    }
+  // Build metadata (your existing shape)
+  const metadata: Metadata = {
+    orderNumber: crypto.randomUUID(),
+    customerName: user.fullName ?? "Unknown",
+    customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
+    clerkUserId: user.id,
+    address: selectedAddress,
   };
+
+  // 1) Ensure Razorpay SDK is available
+  try {
+    await loadRazorpayScript();
+  } catch (err) {
+    console.error("Razorpay SDK load error:", err);
+    toast.error("Payment failed: could not load payment SDK. Try again.");
+    setLoading(false);
+    return;
+  }
+
+  // 2) Sanity-check public key presence (client-side)
+  if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+    console.error("Missing NEXT_PUBLIC_RAZORPAY_KEY_ID");
+    toast.error("Payment configuration error. Contact support.");
+    setLoading(false);
+    return;
+  }
+
+  // 3) Create order on backend
+  let orderData: any;
+  try {
+    const res = await fetch("/api/razorpay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: groupedItems,
+        metadata,
+        amount: getSubTotalPrice(), // pass INR amount; backend will convert to paise
+      }),
+    });
+
+    orderData = await res.json();
+
+    if (!res.ok || !orderData.orderId) {
+      console.error("Order creation failed:", orderData);
+      toast.error(orderData.error || "Failed to create payment order. Try again.");
+      setLoading(false);
+      return;
+    }
+  } catch (err) {
+    console.error("Network / order creation error:", err);
+    toast.error("Failed to initiate payment. Check your connection and try again.");
+    setLoading(false);
+    return;
+  }
+
+  // 4) Prepare Razorpay options
+  const options: any = {
+    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    amount: orderData.amount, // amount in paise (as returned from backend)
+    currency: orderData.currency ?? "INR",
+    name: "Motozoop",
+    description: "Order Payment",
+    order_id: orderData.orderId,
+    prefill: {
+      name: metadata.customerName,
+      email: metadata.customerEmail,
+    },
+    theme: { color: "#3399cc" },
+
+    // IMPORTANT: success callback
+    handler: async function (response: any) {
+      // If modal was dismissed earlier, do nothing
+      if (modalDismissed) {
+        console.warn("Handler invoked after modal dismissal — ignoring.");
+        return;
+      }
+
+      // Prevent duplicate handling
+      if (paymentHandled) {
+        console.warn("Payment already handled — ignoring duplicate.");
+        return;
+      }
+      paymentHandled = true;
+
+      // Extra safety: ensure payment id exists
+      if (!response?.razorpay_payment_id || !response?.razorpay_order_id || !response?.razorpay_signature) {
+        console.error("Incomplete response in handler:", response);
+        toast.error("Payment was not completed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Verify on server
+      try {
+        const verifyRes = await fetch("/api/razorpay/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response),
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyRes.ok && verifyData.valid) {
+          toast.success(`Payment successful! ID: ${response.razorpay_payment_id}`);
+          // Redirect to your success page (include metadata if you want)
+          window.location.href = `/success?orderNumber=${encodeURIComponent(metadata.orderNumber)}`;
+        } else {
+          console.error("Signature verification failed:", verifyData);
+          toast.error("Payment verification failed. Contact support.");
+        }
+      } catch (err) {
+        console.error("Verification request failed:", err);
+        toast.error("Payment verification failed. Try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+
+    // Called when user closes the modal without paying
+    modal: {
+      ondismiss: function () {
+        modalDismissed = true;
+        // mark handled so failure handler won't re-run flow
+        paymentHandled = true;
+        toast.error("Payment cancelled by user.");
+        setLoading(false);
+      },
+      confirm_close: true, // prompts user before closing the checkout
+    },
+  };
+
+  // 5) Open Razorpay and attach failure listener
+  try {
+    const rzp = new (window as any).Razorpay(options);
+
+    rzp.on("payment.failed", function (resp: any) {
+      if (paymentHandled) return;
+      paymentHandled = true;
+      console.error("payment.failed callback:", resp);
+      const errMsg = resp?.error?.description || "Payment failed";
+      toast.error(`Payment failed: ${errMsg}`);
+      setLoading(false);
+    });
+
+    rzp.open();
+    // DO NOT setLoading(false) here — wait for handler / failure / ondismiss to reset state
+  } catch (err) {
+    console.error("Razorpay open error:", err);
+    toast.error("Could not open payment modal. Try again.");
+    setLoading(false);
+  }
+};
+
 
 
 
