@@ -76,11 +76,7 @@ const FranchiseEnquiry = () => {
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
 
       {/* Intro Message Outside Box */}
-<<<<<<< HEAD
-      <div className="mb-6   text-left">
-=======
       <div className="mb-6 text-left">
->>>>>>> a8f2ae20c9d2edec6b1a328c3d227793098de64e
         <h2 className="text-3xl font-bold text-gray-800 mb-4 mt-4">Franchise Enquiry</h2>
         <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-1">
           Join <span className="font-semibold text-shop_light_green">MotoZoop</span>, one of the leading car interior and exterior

@@ -13,6 +13,34 @@
  */
 
 // Source: schema.json
+export type Message = {
+  _id: string;
+  _type: "message";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+  createdAt?: string;
+};
+
+export type Franchise = {
+  _id: string;
+  _type: "franchise";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  preferredLocation?: string;
+  investmentCapacity?: number;
+  message?: string;
+  submittedAt?: string;
+};
+
 export type Address = {
   _id: string;
   _type: "address";
@@ -25,6 +53,7 @@ export type Address = {
   city?: string;
   state?: string;
   zipCode?: string;
+  phoneNumber?: string;
   default?: boolean;
   createdAt?: string;
 };
@@ -160,13 +189,13 @@ export type Order = {
     number?: string;
     hosted_invoice_url?: string;
   };
-  stripeCheckoutSessionId?: string;
-  stripeCustomerId?: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
   clerkUserId?: string;
   customerName?: string;
   phoneNumber?: string;
   email?: string;
-  stripePaymentIntentId?: string;
   products?: Array<{
     product?: {
       _ref: string;
@@ -178,7 +207,6 @@ export type Order = {
     _key: string;
   }>;
   totalPrice?: number;
-  currency?: string;
   amountDiscount?: number;
   address?: {
     state?: string;
@@ -213,6 +241,7 @@ export type Product = {
     _key: string;
   }>;
   description?: string;
+  overview?: string;
   price?: number;
   discount?: number;
   categories?: Array<{
@@ -232,6 +261,8 @@ export type Product = {
   status?: "new" | "hot" | "sale";
   varient?: "dashboard_accesories" | "interior" | "exterior" | "detailing" | "car_care_products";
   isFeatured?: boolean;
+  colors?: Array<string>;
+  statues?: Array<string>;
 };
 
 export type Brand = {
@@ -432,7 +463,7 @@ export type SanityAssetSourceData = {
   url?: string;
 };
 
-export type AllSanitySchemaTypes = Address | Blog | Author | Blogcategory | Order | Product | Brand | BlockContent | Category | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
+export type AllSanitySchemaTypes = Message | Franchise | Address | Blog | Author | Blogcategory | Order | Product | Brand | BlockContent | Category | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./sanity/queries/query.ts
 // Variable: LATEST_BLOG_QUERY
@@ -524,6 +555,7 @@ export type DEAL_PRODUCTSResult = Array<{
     _key: string;
   }>;
   description?: string;
+  overview?: string;
   price?: number;
   discount?: number;
   categories: Array<string | null> | null;
@@ -537,6 +569,8 @@ export type DEAL_PRODUCTSResult = Array<{
   status?: "hot" | "new" | "sale";
   varient?: "car_care_products" | "dashboard_accesories" | "detailing" | "exterior" | "interior";
   isFeatured?: boolean;
+  colors?: Array<string>;
+  statues?: Array<string>;
 }>;
 // Variable: PRODUCTS_BY_SLUG_QUERY
 // Query: *[_type == 'product' && slug.current == $slug] | order(name asc) [0]
@@ -562,6 +596,7 @@ export type PRODUCTS_BY_SLUG_QUERYResult = {
     _key: string;
   }>;
   description?: string;
+  overview?: string;
   price?: number;
   discount?: number;
   categories?: Array<{
@@ -581,7 +616,259 @@ export type PRODUCTS_BY_SLUG_QUERYResult = {
   status?: "hot" | "new" | "sale";
   varient?: "car_care_products" | "dashboard_accesories" | "detailing" | "exterior" | "interior";
   isFeatured?: boolean;
+  colors?: Array<string>;
+  statues?: Array<string>;
 } | null;
+// Variable: GET_ALL_BLOG
+// Query: *[_type == 'blog'] | order(publishedAt desc)[0...$quantity]{    ...,    blogcategories[]->{      title}    }
+export type GET_ALL_BLOGResult = Array<{
+  _id: string;
+  _type: "blog";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  slug?: Slug;
+  author?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "author";
+  };
+  mainImage?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  blogcategories: Array<{
+    title: string | null;
+  }> | null;
+  publishedAt?: string;
+  isLatest?: boolean;
+  body?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+    listItem?: "bullet";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  } | {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    _key: string;
+  }>;
+}>;
+// Variable: SINGLE_BLOG
+// Query: *[_type=="blog" && slug.current == $slug][0]{    title,    body,    mainImage,    publishedAt,    author->{      name,      image    },    categories[]->{      title,      'slug': slug.current    }  }
+export type SINGLE_BLOGResult = {
+  title: string | null;
+  body: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+    listItem?: "bullet";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  } | {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    _key: string;
+  }> | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  publishedAt: string | null;
+  author: {
+    name: string | null;
+    image: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  } | null;
+  categories: null;
+} | null;
+// Variable: BLOG_CATEGORIES
+// Query: *[_type == "blogcategories"]{    _id,    title,    slug,    "blogCount": count(*[_type=="blog" && references(^._id)])  }
+export type BLOG_CATEGORIESResult = Array<never>;
+// Variable: OTHER_BLOGS
+// Query: *[    _type == "blog" &&    defined(slug.current) &&    slug.current != $slug  ] | order(publishedAt desc)[0...$quantity]{    publishedAt,    title,    slug,    mainImage,    author->{      name,      image    },    categories[]->{      title,      'slug': slug.current    }  }
+export type OTHER_BLOGSResult = Array<{
+  publishedAt: string | null;
+  title: string | null;
+  slug: Slug | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  author: {
+    name: string | null;
+    image: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  } | null;
+  categories: null;
+}>;
+// Variable: MY_ORDERS_QUERY
+// Query: *[_type == 'order' && clerkUserId == $userId] | order(orderData desc) {    ...,    products[] {      ...,      product->    }  }
+export type MY_ORDERS_QUERYResult = Array<{
+  _id: string;
+  _type: "order";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  orderNumber?: string;
+  invoice?: {
+    id?: string;
+    number?: string;
+    hosted_invoice_url?: string;
+  };
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  clerkUserId?: string;
+  customerName?: string;
+  phoneNumber?: string;
+  email?: string;
+  products: Array<{
+    product: {
+      _id: string;
+      _type: "product";
+      _createdAt: string;
+      _updatedAt: string;
+      _rev: string;
+      name?: string;
+      slug?: Slug;
+      images?: Array<{
+        asset?: {
+          _ref: string;
+          _type: "reference";
+          _weak?: boolean;
+          [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+        };
+        media?: unknown;
+        hotspot?: SanityImageHotspot;
+        crop?: SanityImageCrop;
+        _type: "image";
+        _key: string;
+      }>;
+      description?: string;
+      overview?: string;
+      price?: number;
+      discount?: number;
+      categories?: Array<{
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        _key: string;
+        [internalGroqTypeReferenceTo]?: "category";
+      }>;
+      stock?: number;
+      brand?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "brand";
+      };
+      status?: "hot" | "new" | "sale";
+      varient?: "car_care_products" | "dashboard_accesories" | "detailing" | "exterior" | "interior";
+      isFeatured?: boolean;
+      colors?: Array<string>;
+      statues?: Array<string>;
+    } | null;
+    quantity?: number;
+    _key: string;
+  }> | null;
+  totalPrice?: number;
+  amountDiscount?: number;
+  address?: {
+    state?: string;
+    zip?: string;
+    city?: string;
+    address?: string;
+    name?: string;
+  };
+  status?: "cancelled" | "delivered" | "order_confirmed" | "out_for_delivery" | "packing" | "paid" | "pending" | "processing" | "shipped";
+  orderDate?: string;
+}>;
 
 // Query TypeMap
 import "@sanity/client";
@@ -590,5 +877,10 @@ declare module "@sanity/client" {
     "*[_type == 'blog' && isLatest == true] | order(name asc){\n    ...,\n    blogcategories[]->{\n      title\n    }\n  }": LATEST_BLOG_QUERYResult;
     "*[_type == 'product' && status == 'hot'] | order(name asc){\n    ...,\n    \"categories\": categories[]->title\n  }": DEAL_PRODUCTSResult;
     "*[_type == 'product' && slug.current == $slug] | order(name asc) [0]": PRODUCTS_BY_SLUG_QUERYResult;
+    "*[_type == 'blog'] | order(publishedAt desc)[0...$quantity]{\n    ...,\n    blogcategories[]->{\n      title\n}\n    }\n  ": GET_ALL_BLOGResult;
+    "\n  *[_type==\"blog\" && slug.current == $slug][0]{\n    title,\n    body,\n    mainImage,\n    publishedAt,\n    author->{\n      name,\n      image\n    },\n    categories[]->{\n      title,\n      'slug': slug.current\n    }\n  }\n": SINGLE_BLOGResult;
+    "\n  *[_type == \"blogcategories\"]{\n    _id,\n    title,\n    slug,\n    \"blogCount\": count(*[_type==\"blog\" && references(^._id)])\n  }\n": BLOG_CATEGORIESResult;
+    "\n  *[\n    _type == \"blog\" &&\n    defined(slug.current) &&\n    slug.current != $slug\n  ] | order(publishedAt desc)[0...$quantity]{\n    publishedAt,\n    title,\n    slug,\n    mainImage,\n    author->{\n      name,\n      image\n    },\n    categories[]->{\n      title,\n      'slug': slug.current\n    }\n  }\n": OTHER_BLOGSResult;
+    "\n  *[_type == 'order' && clerkUserId == $userId] | order(orderData desc) {\n    ...,\n    products[] {\n      ...,\n      product->\n    }\n  }\n": MY_ORDERS_QUERYResult;
   }
 }

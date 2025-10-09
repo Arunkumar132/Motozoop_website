@@ -13,11 +13,8 @@ import PriceFormatter from "./PriceFormatter";
 import { format } from "date-fns";
 import { X } from "lucide-react";
 
-interface OrdersComponentProps {
-  orders?: MY_ORDERS_QUERYResult; // mark as optional to handle undefined safely
-}
 
-const OrdersComponent = ({ orders = [] }: OrdersComponentProps) => {
+const OrdersComponent = ({ orders }: {orders:MY_ORDERS_QUERYResult}) => {
   return (
     <TableBody>
       <TooltipProvider>
@@ -27,7 +24,7 @@ const OrdersComponent = ({ orders = [] }: OrdersComponentProps) => {
               <TooltipTrigger asChild>
                 <TableRow
                   className="cursor-pointer hover:bg-gray-100 h-12"
-                  // onClick={() => handleOrderClick(order)}
+                  onClick={() => handleOrderClick(order)}
                 >
                   {/* Order Number */}
                   <TableCell className="font-medium">
@@ -44,7 +41,7 @@ const OrdersComponent = ({ orders = [] }: OrdersComponentProps) => {
                   </TableCell>
 
                   {/* Customer Name */}
-                  <TableCell>{order?.CustomerName ?? "Unknown"}</TableCell>
+                  <TableCell>{order?.customerName ?? "Unknown"}</TableCell>
 
                   {/* Email */}
                   <TableCell className="hidden sm:table-cell">
@@ -85,10 +82,10 @@ const OrdersComponent = ({ orders = [] }: OrdersComponentProps) => {
                   {/* Delete / Action */}
                   <TableCell
                     className="flex items-center justify-center group"
-                    // onClick={(event) => {
-                    //   event.stopPropagation();
-                    //   handleDelete(order);
-                    // }}
+                    onClick={(event) => {
+                    event.stopPropagation();
+                    handleDelete(order);
+                    }}
                   >
                     <X
                       size={20}

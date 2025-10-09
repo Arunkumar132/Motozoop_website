@@ -24,7 +24,7 @@ const OrdersPage = async() => {
     return(
         <div>
           <Container className="py-10">
-            {!orders?.length ? <Card className="w-full">
+            {orders?.length ? <Card className="w-full">
               <CardHeader>
                 <CardTitle>My Orders</CardTitle>
               </CardHeader>
@@ -43,7 +43,7 @@ const OrdersPage = async() => {
                         <TableHead className="text-center">Action</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <OrdersComponent />
+                    <OrdersComponent orders={orders} />
                   </Table>
                   <ScrollBar orientation="horizontal"/>
                 </ScrollArea>
@@ -62,4 +62,8 @@ const OrdersPage = async() => {
     )
 }
 
+import * as SanityTypes from "@/sanity.types";
+console.log(Object.keys(SanityTypes));
+
 export default OrdersPage;
+

@@ -16,13 +16,14 @@ export async function POST(req: NextRequest) {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
     if (!signature || !webhookSecret) {
-      console.error("Missing signature or webhook secret");
+      console.error("Webhook missing signature or secret");
       return NextResponse.json({ error: "Invalid webhook request" }, { status: 400 });
     }
 
-    const expectedSignature = crypto.createHmac("sha256", webhookSecret).update(body).digest("hex");
+    // Verify Razorpay webhook signature
+    const expectedSignature = crypto.createHmac("sha256", webhookSecret).update(body, "utf8").digest("hex");
     if (signature !== expectedSignature) {
-      console.error("Webhook signature verification failed");
+      console.error("Webhook signature mismatch");
       return NextResponse.json({ error: "Signature mismatch" }, { status: 400 });
     }
 
@@ -33,8 +34,17 @@ export async function POST(req: NextRequest) {
       const payment = event.payload.payment.entity;
       const razorpayOrder = await razorpay.orders.fetch(payment.order_id);
       const notes = razorpayOrder.notes || {};
+      console.log("Razorpay notes:", notes);
 
-      // Call Sanity order creation
+      // Validate required fields
+      const requiredFields = ["orderNumber", "customerName", "customerEmail", "phoneNumber", "clerkUserId", "lineItems"];
+      for (const field of requiredFields) {
+        if (!notes[field]) {
+          console.error(`Missing required field in notes: ${field}`);
+          return NextResponse.json({ error: `Missing field: ${field}` }, { status: 400 });
+        }
+      }
+
       await createOrderInSanity(payment, notes);
     }
 
@@ -47,25 +57,42 @@ export async function POST(req: NextRequest) {
 
 // Function to create order in Sanity
 async function createOrderInSanity(payment: any, notes: any) {
-  const { orderNumber, customerName, customerEmail, phoneNumber, clerkUserId, address, lineItems } = notes;
-  const parsedAddress = address ? JSON.parse(address) : null;
+  try {
+    const {
+      orderNumber,
+      customerName,
+      customerEmail,
+      phoneNumber,
+      clerkUserId,
+      address,
+      lineItems,
+    } = notes;
 
-  const sanityProducts: any[] = [];
-  const stockUpdates: { productId: string; quantity: number }[] = [];
+    const parsedAddress = address ? JSON.parse(address) : null;
 
-  (lineItems || []).forEach((item: any) => {
-    if (!item.productId) return;
+    const sanityProducts: any[] = [];
+    const stockUpdates: { productId: string; quantity: number }[] = [];
 
-    sanityProducts.push({
-      _key: crypto.randomUUID(),
-      product: { _type: "reference", _ref: item.productId },
-      quantity: item.quantity || 0,
+    (lineItems || []).forEach((item: any) => {
+      if (!item.productId) return;
+
+      sanityProducts.push({
+        _key: crypto.randomUUID(),
+        _type: "orderProduct",
+        product: { _type: "reference", _ref: item.productId },
+        quantity: item.quantity || 0,
+      });
+
+      stockUpdates.push({ productId: item.productId, quantity: item.quantity || 0 });
     });
 
-    stockUpdates.push({ productId: item.productId, quantity: item.quantity || 0 });
-  });
+    console.log("Creating order in Sanity:", {
+      orderNumber,
+      customerName,
+      products: sanityProducts,
+      totalPrice: payment.amount / 100,
+    });
 
-  try {
     const order = await backendClient.create({
       _type: "order",
       orderNumber,
