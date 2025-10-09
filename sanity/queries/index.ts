@@ -1,6 +1,6 @@
 import { serverClient } from "@/lib/sanity.server";
 import { sanityFetch } from "../lib/live";
-import { BLOG_CATEGORIES, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, OTHER_BLOGS, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
+import { BLOG_CATEGORIES, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, MY_ORDERS_QUERY, OTHER_BLOGS, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
 
 const getCategories = async (quantity?: number) => {
   try {
@@ -105,4 +105,19 @@ const getOthersBlog = async (slug: string, quantity: number) => {
   }
 };
 
-export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getOthersBlog, getBlogCategories };
+const getOrders = async (userId: string) => {
+  try {
+    const orders = await sanityFetch({
+      query: MY_ORDERS_QUERY,
+      params:{
+        userId
+      }
+    })
+    return orders?.data || null;
+  } catch (error) {
+    console.error("Error",error);
+    return null;
+  }
+};
+
+export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getOthersBlog, getBlogCategories, getOrders };

@@ -77,6 +77,12 @@ const OTHER_BLOGS = defineQuery(`
   }
 `);
 
+const MY_ORDERS_QUERY = defineQuery(`
+  *[_type == 'order' && clerkUserId == $userId] | order(orderData desc) {
+  ...,products[]{
+  ...,product->
+  }}`);
 
 
-export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG, SINGLE_BLOG, BLOG_CATEGORIES, OTHER_BLOGS };
+
+export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG, SINGLE_BLOG, BLOG_CATEGORIES, OTHER_BLOGS, MY_ORDERS_QUERY };

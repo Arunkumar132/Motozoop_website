@@ -7,11 +7,11 @@ import SearchBar from "./SearchBar";
 import Carticon from "./Carticon";
 import FavoriteButton from "./FavoriteButton";
 import MobileMenu from "./MobileMenu";
-import { useUser, ClerkLoaded, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { ClerkLoaded, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
+import { Logs } from "lucide-react";
 
-const Header = () => {
-  const { user } = useUser();
-
+export default function Header({ orders = [] }) {
   return (
     <header className="bg-white/70 py-5 sticky top-0 z-50 backdrop-blur-md">
       <Container className="flex items-center justify-between text-lightColor">
@@ -24,9 +24,14 @@ const Header = () => {
           <SearchBar />
           <Carticon />
           <FavoriteButton />
-
           <ClerkLoaded>
             <SignedIn>
+              <Link href="/orders" className="relative group hover:text-shop_light_green transition">
+                <Logs />
+                <span className="absolute -top-1 -right-1 bg-shop_btn_dark_green text-white h-3.5 w-3.5 rounded-full text-xs font-semibold flex items-center justify-center">
+                  {orders.length}
+                </span>
+              </Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             <SignedOut>
@@ -37,6 +42,4 @@ const Header = () => {
       </Container>
     </header>
   );
-};
-
-export default Header;
+}
