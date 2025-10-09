@@ -61,6 +61,13 @@ export const addressType = defineType({
           }),
     }),
     defineField({
+      name: "phoneNumber",      // <- name must match what you send from frontend
+      title: "Phone Number",
+      type: "string",
+      description: "User phone number",
+      validation: (Rule) => Rule.required().min(10).max(15), // optional: adjust limits
+    }),
+    defineField({
       name: "default",
       title: "Default Address",
       type: "boolean",

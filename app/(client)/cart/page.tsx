@@ -110,7 +110,8 @@ const CartPage = () => {
       document.body.appendChild(script);
     });
 
-  /* Replace your existing handleCheckout with this function */
+
+  /* Updated handleCheckout to match Sanity order schema */
   const handleCheckout = async () => {
     if (!user) {
       toast.error("Please login to continue");
@@ -123,8 +124,6 @@ const CartPage = () => {
     }
 
     setLoading(true);
-
-    // Prevent duplicate handling
     let paymentHandled = false;
 
     // Build metadata
@@ -133,28 +132,26 @@ const CartPage = () => {
       customerName: user.fullName ?? "Unknown",
       customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
       clerkUserId: user.id,
+      phoneNumber: selectedAddress.mobile ?? "", // make sure you have phone number in your user
       address: selectedAddress,
     };
 
-    // 1️⃣ Load Razorpay SDK
+    // Load Razorpay SDK
     try {
       await loadRazorpayScript();
     } catch (err) {
-      console.error("Razorpay SDK load failed:", err);
       toast.error("Payment SDK failed to load. Try again.");
       setLoading(false);
       return;
     }
 
-    // 2️⃣ Check public key
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
-      console.error("Missing NEXT_PUBLIC_RAZORPAY_KEY_ID");
       toast.error("Payment configuration error. Contact support.");
       setLoading(false);
       return;
     }
 
-    // 3️⃣ Create Razorpay order via backend
+    // Create Razorpay order via backend
     let orderData: any;
     try {
       const res = await fetch("/api/razorpay", {
@@ -169,19 +166,17 @@ const CartPage = () => {
 
       orderData = await res.json();
       if (!res.ok || !orderData.orderId) {
-        console.error("Order creation failed:", orderData);
         toast.error(orderData.error || "Failed to create payment order.");
         setLoading(false);
         return;
       }
     } catch (err) {
-      console.error("Network / order creation error:", err);
       toast.error("Could not initiate payment. Try again.");
       setLoading(false);
       return;
     }
 
-    // 4️⃣ Prepare Razorpay options
+    // Prepare Razorpay options
     const options: any = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: orderData.amount,
@@ -199,8 +194,8 @@ const CartPage = () => {
         if (paymentHandled) return;
         paymentHandled = true;
 
-        // Verify payment
         try {
+          // Verify payment
           const verifyRes = await fetch("/api/razorpay/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -214,18 +209,36 @@ const CartPage = () => {
             return;
           }
 
-          // ✅ Create order in Sanity
+          // Prepare products for Sanity
+          const sanityProducts = groupedItems.map((item) => ({
+            _key: crypto.randomUUID(),
+            product: { _type: "reference", _ref: item._id },
+            quantity: item.quantity,
+            productName: item.name,
+            productImage: item.image, // first image
+            discountedPrice: item.discountedPrice ?? item.price,
+          }));
+
+          // Use the store's total and subtotal
+          const originalPrice = getTotalPrice();      // before discount
+          const totalPrice = getSubTotalPrice();      // after discount
+          const amountDiscount = originalPrice - totalPrice;
+
+
+          // Create order in Sanity
           const orderRes = await fetch("/api/orders/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               payment: response,
               metadata,
-              items: groupedItems,
+              items: sanityProducts,
+              totalPrice,
+              amountDiscount,
             }),
           });
-          const orderData = await orderRes.json();
 
+          const orderData = await orderRes.json();
           if (!orderRes.ok || !orderData.success) {
             toast.error("Order creation failed. Contact support.");
             setLoading(false);
@@ -254,10 +267,8 @@ const CartPage = () => {
       },
     };
 
-    // 5️⃣ Open Razorpay and attach failure listener
     try {
       const rzp = new (window as any).Razorpay(options);
-
       rzp.on("payment.failed", (resp: any) => {
         if (paymentHandled) return;
         paymentHandled = true;
@@ -265,15 +276,13 @@ const CartPage = () => {
         toast.error(`Payment failed: ${errMsg}`);
         setLoading(false);
       });
-
       rzp.open();
-      // Wait for handler / failure / ondismiss to reset loading
     } catch (err) {
-      console.error("Razorpay open error:", err);
       toast.error("Could not open payment modal. Try again.");
       setLoading(false);
     }
   };
+
 
 
   // Add address

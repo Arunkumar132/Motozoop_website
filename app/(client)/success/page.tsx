@@ -9,8 +9,9 @@ import Link from "next/link";
 import { backendClient } from "@/sanity/lib/backendClient";
 
 interface Product {
-  product: { _ref: string; _type: string; name?: string };
   quantity: number;
+  productName?: string;
+  productImage?: string;
 }
 
 interface Order {
@@ -32,7 +33,6 @@ const SuccessPage = () => {
     if (orderNumber) {
       resetCart();
 
-      // Fetch order details from Sanity
       const fetchOrder = async () => {
         try {
           const query = `*[_type == "order" && orderNumber == $orderNumber][0]{
@@ -42,17 +42,18 @@ const SuccessPage = () => {
             currency,
             products[]{
               quantity,
-              product->{
-                name
-              }
+              productName,
+              productImage
             }
           }`;
+
           const orderData = await backendClient.fetch(query, { orderNumber });
           if (orderData) setOrder(orderData);
         } catch (err) {
           console.error("Error fetching order:", err);
         }
       };
+
       fetchOrder();
     }
   }, [orderNumber, resetCart]);
@@ -93,7 +94,7 @@ const SuccessPage = () => {
               <ul className="list-disc list-inside">
                 {order.products.map((item, index) => (
                   <li key={index}>
-                    {item.product?.name || "Product"} x {item.quantity}
+                    {item.productName || "Product"} x {item.quantity}
                   </li>
                 ))}
               </ul>
@@ -107,7 +108,7 @@ const SuccessPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Link
             href="/"
-            className="flex items-center justify-center px-4 py-3 font-semibold bg-black text-white rounded-lg hover:bg-gray-80 transition-all duration-300 shadow-md"
+            className="flex items-center justify-center px-4 py-3 font-semibold bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-md"
           >
             <Home className="w-5 h-5 mr-2" />
             Home
