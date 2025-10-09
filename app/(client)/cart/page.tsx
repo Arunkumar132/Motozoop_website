@@ -126,6 +126,11 @@ const CartPage = () => {
     setLoading(true);
     let paymentHandled = false;
 
+    // Use the store's total and subtotal
+    const originalPrice = getTotalPrice();      // before discount
+    const totalPrice = getSubTotalPrice();      // after discount
+    const amountDiscount = originalPrice - totalPrice;
+
     // Build metadata
     const metadata: Metadata = {
       orderNumber: crypto.randomUUID(),
@@ -134,6 +139,8 @@ const CartPage = () => {
       clerkUserId: user.id,
       phoneNumber: selectedAddress.mobile ?? "", // make sure you have phone number in your user
       address: selectedAddress,
+      totalPrice,
+      amountDiscount,
     };
 
     // Load Razorpay SDK
@@ -212,19 +219,15 @@ const CartPage = () => {
           // Prepare products for Sanity
           const sanityProducts = groupedItems.map((item) => ({
             _key: crypto.randomUUID(),
-            product: { _type: "reference", _ref: item._id },
+            product: { _type: "reference", _ref: item.product._id }, // reference the actual product ID
             quantity: item.quantity,
-            productName: item.name,
-            productImage: item.image, // first image
-            discountedPrice: item.discountedPrice ?? item.price,
+            productName: item.product.name,
+            productImage: item.product.images?.[0] ?? null,
+            discountedPrice: item.product.discountedPrice ?? item.product.price,
           }));
 
-          // Use the store's total and subtotal
-          const originalPrice = getTotalPrice();      // before discount
-          const totalPrice = getSubTotalPrice();      // after discount
-          const amountDiscount = originalPrice - totalPrice;
 
-
+        
           // Create order in Sanity
           const orderRes = await fetch("/api/orders/create", {
             method: "POST",

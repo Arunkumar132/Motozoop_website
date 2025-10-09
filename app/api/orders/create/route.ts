@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
     // Prepare products for Sanity
     const sanityProducts = items.map((item: any) => ({
       _key: crypto.randomUUID(),
-      product: { _type: "reference", _ref: item._id },
+      product: item.product,
       quantity: item.quantity,
-      productName: item.name,
-      productImage: item.image,
+      productName: item.productName,
+      productImage: item.productImage,
       discountedPrice: item.discountedPrice ?? item.price,
     }));
 
@@ -41,8 +41,7 @@ export async function POST(req: NextRequest) {
       email: metadata.customerEmail,
       clerkUserId: metadata.clerkUserId,
       products: sanityProducts,
-      totalPrice: orderTotalPrice,
-      currency: payment.currency ?? "INR",
+      totalPrice: metadata.totalPrice ?? 0,
       amountDiscount: metadata.amountDiscount ?? 0,
       status: "paid",
       orderDate: new Date().toISOString(),
@@ -56,9 +55,9 @@ export async function POST(req: NextRequest) {
             mobile: parsedAddress.mobile,
           }
         : null,
-      invoiceId: invoiceId || "",
-      invoiceNumber: invoiceNumber || "",
-      hostedInvoiceUrl: hostedInvoiceUrl || "",
+      invoiceId: "",
+      invoiceNumber: "",
+      hostedInvoiceUrl: "",
     });
 
     // ✅ Update stock levels
