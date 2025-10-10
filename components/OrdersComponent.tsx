@@ -79,13 +79,11 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                       <p className="font-bold">--------</p>
                     </TableCell>
 
-                    {/* Delete */}
-                    <TableCell
-                      className="flex items-center justify-center group"
-                      onClick={(e) => handleDelete(order, e)}
-                    >
-                      <X size={18} className="group-hover:text-red-600 transition" />
+                    <TableCell>
+                      <p className="font-bold">--------</p>
                     </TableCell>
+
+                    
                   </TableRow>
                 </TooltipTrigger>
                 <TooltipContent>

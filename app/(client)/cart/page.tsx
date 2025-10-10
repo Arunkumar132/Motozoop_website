@@ -49,6 +49,7 @@ const CartPage = () => {
   const groupedItems = useStore((state) => state.getGroupedItems());
   const { isSignedIn } = useAuth();
   const { user } = useUser(); 
+  const currentUserId = user?.id;
 
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[] | null>(null);
@@ -68,6 +69,7 @@ const CartPage = () => {
 
   // Fetch addresses
   const fetchAddresses = async () => {
+    if (!currentUserId) return;
     setLoading(true);
     try {
       const res = await fetch("/api/address");
@@ -86,7 +88,7 @@ const CartPage = () => {
 
   useEffect(() => {
     fetchAddresses();
-  }, []);
+  }, [currentUserId]);
 
   // Reset cart
   const handleResetCart = () => {
@@ -454,7 +456,8 @@ const CartPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Discount</span>
-                          <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} />
+                          <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} 
+                          className="font-semibold text-red-600"/>
                         </div>
                         <Separator />
                         <div className="flex items-center justify-between font-semibold text-lg">
