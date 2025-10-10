@@ -62,8 +62,6 @@ const OrdersPage = async() => {
     )
 }
 
-import * as SanityTypes from "@/sanity.types";
-console.log(Object.keys(SanityTypes));
 
 export default OrdersPage;
 

@@ -33,6 +33,8 @@
     "dayjs": "^1.11.18",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.542.0",
     "motion": "^12.23.12",
     "next": "15.5.2",
