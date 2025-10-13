@@ -21,15 +21,13 @@ const formatAddress = (addr: any) => {
 const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
   if (!order) return null;
 
-  // Safely get products
-  const products = order.products || order.items || order.lineItems || [
+  const products = order.products || order.items || [
     { name: "Car Accessory", quantity: 1, price: order.totalPrice ?? 0 },
   ];
 
   const handleDownloadInvoice = () => {
     const doc = new jsPDF();
 
-    // Load logo from public folder
     const img = new Image();
     img.src = "/logo1.png";
     img.onload = () => {
@@ -37,10 +35,10 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
       const imgHeight = (img.height / img.width) * imgWidth;
       doc.addImage(img, "PNG", 160, 10, imgWidth, imgHeight);
 
-      // Company Info
       doc.setFontSize(20);
       doc.setFont("helvetica", "bold");
       doc.text("MotoZoop", 14, 20);
+
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text("Car Accessories Pvt. Ltd.", 14, 26);
@@ -49,21 +47,20 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
 
       doc.line(14, 40, 195, 40);
 
-      // Invoice Info
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text("INVOICE", 14, 50);
+
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Invoice #: ${order?.invoice?.number ?? "N/A"}`, 14, 60);
-      doc.text(`Order #: ${order?.orderNumber ?? "N/A"}`, 14, 67);
+      doc.text(`Invoice #: ${order.invoiceId ?? "N/A"}`, 14, 60);
+      doc.text(`Order #: ${order.orderNumber ?? "N/A"}`, 14, 67);
       doc.text(
         `Date: ${order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"}`,
         14,
         74
       );
 
-      // Customer Info
       doc.setFont("helvetica", "bold");
       doc.text("Bill To:", 14, 86);
       doc.setFont("helvetica", "normal");
@@ -71,7 +68,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
       doc.text(order.email ?? "N/A", 14, 97);
       doc.text(formatAddress(order.address), 14, 102);
 
-      // Products Table
       const rows = products.map((p: any, i: number) => [
         i + 1,
         p.name ?? "Product",
@@ -89,7 +85,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
         styles: { fontSize: 11, cellPadding: 3 },
       });
 
-      // Total
       const finalY = (doc as any).lastAutoTable.finalY + 10;
       const total = products.reduce(
         (sum, p) => sum + (p.price ?? 0) * (p.quantity ?? 0),
@@ -102,7 +97,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
 
       doc.line(140, finalY + 2, 195, finalY + 2);
 
-      // Footer
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text("Thank you for shopping with MotoZoop!", 14, finalY + 20);
@@ -115,7 +109,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6 bg-white rounded-2xl shadow-lg">
-        {/* Header */}
         <div className="flex justify-between items-center border-b pb-4 mb-4">
           <div>
             <h2 className="text-2xl font-bold">MotoZoop</h2>
@@ -131,8 +124,8 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
         {/* Invoice Info */}
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
-            <p><strong>Invoice #: </strong>{order?.invoice?.number ?? "N/A"}</p>
-            <p><strong>Order #: </strong>{order?.orderNumber ?? "N/A"}</p>
+            <p><strong>Invoice #: </strong>{order.invoice ?? "N/A"}</p>
+            <p><strong>Order #: </strong>{order.orderNumber ?? "N/A"}</p>
             <p><strong>Date: </strong>{order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"}</p>
           </div>
           <div className="text-right">
@@ -141,7 +134,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
                 order.status === "paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
               }`}
             >
-              {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
+              {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) ?? "Pending"}
             </span>
           </div>
         </div>

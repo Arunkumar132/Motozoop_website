@@ -26,11 +26,6 @@ export default async function RootLayout({
 }) {
   // ✅ Fetch orders from Sanity on the server
     const {userId} = await auth();
-    if(!userId){
-      return(
-        redirect('/')
-      )
-    }
     const orders = await getOrders(userId);
 
   return (

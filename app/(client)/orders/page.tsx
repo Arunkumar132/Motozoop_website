@@ -38,8 +38,7 @@ const OrdersPage = async() => {
                         <TableHead>Customer</TableHead>
                         <TableHead className="hidden sm:table-cell">Email</TableHead>
                         <TableHead>Total</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Delivery Status</TableHead>
+                        <TableHead>Order Status</TableHead>
                         <TableHead className="hidden sm:table-cell">Invoice Number</TableHead>
                       </TableRow>
                     </TableHeader>

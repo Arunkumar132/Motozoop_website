@@ -64,24 +64,41 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                       <PriceFormatter amount={order?.totalPrice ?? 0} />
                     </TableCell>
 
-                    {/* Status */}
+
                     <TableCell>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          order.status === "paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-sm font-semibold capitalize
+                          ${
+                            order.status === "delivered"
+                              ? "bg-green-100 text-green-700"
+                              : order.status === "shipped"
+                              ? "bg-blue-100 text-blue-700"
+                              : order.status === "out_for_delivery"
+                              ? "bg-sky-100 text-sky-700"
+                              : order.status === "packing"
+                              ? "bg-orange-100 text-orange-700"
+                              : order.status === "order_confirmed"
+                              ? "bg-indigo-100 text-indigo-700"
+                              : order.status === "processing"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : order.status === "paid"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : order.status === "cancelled"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
                       >
-                        {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
+                        {order.status ? order.status.replaceAll("_", " ") : "pending"}
                       </span>
                     </TableCell>
 
-                    <TableCell>
-                      <p className="font-bold">--------</p>
-                    </TableCell>
 
                     <TableCell>
-                      <p className="font-bold">--------</p>
+                      <p className="">
+                        {order.invoiceId ? order.invoiceId : "N/A"}
+                      </p>
                     </TableCell>
+
 
                     
                   </TableRow>
