@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Container from "./Container";
 import Logo from "./Logo";
 import HeaderMenu from "./HeaderMenu";
@@ -16,13 +16,23 @@ import {
   SignedOut,
   SignInButton,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 
-interface HeaderProps {
-  orders?: any[];
-}
+export default function Header() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const { user } = useUser();
 
-export default function Header({ orders = [] }: HeaderProps) {
+  useEffect(() => {
+    if (user?.id) {
+      (async () => {
+        const res = await fetch(`/api/orders?userId=${user.id}`);
+        const data = await res.json();
+        setOrders(data || []);
+      })();
+    }
+  }, [user?.id]);
+
   return (
     <header className="bg-white/70 py-5 sticky top-0 z-50 backdrop-blur-md">
       <Container className="flex items-center justify-between text-lightColor">

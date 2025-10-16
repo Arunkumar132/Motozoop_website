@@ -82,7 +82,6 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                     {/* Delete */}
                     <TableCell
                       className="flex items-center justify-center group"
-                      onClick={(e) => handleDelete(order, e)}
                     >
                       <X size={18} className="group-hover:text-red-600 transition" />
                     </TableCell>
