@@ -6,7 +6,6 @@ import { TableBody, TableCell, TableRow } from "./ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import PriceFormatter from "./PriceFormatter";
 import { format } from "date-fns";
-import { X } from "lucide-react";
 import Invoice from "./Invoice";
 
 const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
@@ -26,6 +25,21 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
   const sortedOrders = Array.isArray(orders)
     ? [...orders].sort((a, b) => (new Date(b.orderDate).getTime() || 0) - (new Date(a.orderDate).getTime() || 0))
     : [];
+
+  // --- Track Shipment Function ---
+  const handleTracking = (trackingId: string, partner: string) => {
+    if (partner === "dtdc") {
+      const url = `https://www.dtdc.com/tracking/?consignment=${trackingId}`;
+      window.open(url, "_blank");
+    } else if (partner === "french_express") {
+      const url = "https://franchexpress.com/courier-tracking/";
+      window.open(url, "_blank");
+      alert(`Your tracking ID is: ${trackingId}\nPlease paste it into the French Express tracking box.`);
+    } else {
+      alert("Tracking partner not available");
+    }
+  };
+
 
   return (
     <>
@@ -64,7 +78,7 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                       <PriceFormatter amount={order?.totalPrice ?? 0} />
                     </TableCell>
 
-
+                    {/* Order Status */}
                     <TableCell>
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold capitalize
@@ -92,15 +106,18 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                       </span>
                     </TableCell>
 
-
+                    {/* Invoice Number */}
                     <TableCell>
-                      <p className="">
-                        {order.invoiceId ? order.invoiceId : "N/A"}
-                      </p>
+                      <p>{order.invoiceId ?? "N/A"}</p>
                     </TableCell>
 
-
+                    <TableCell>
+                      <p>{order.trackingId ?? "N/A"}</p>
+                    </TableCell>
                     
+                    <TableCell>
+                      <p>{order.deliveryPartner ?? "N/A"}</p>
+                    </TableCell>
                   </TableRow>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -110,7 +127,7 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-gray-500 text-sm">
+              <TableCell colSpan={8} className="text-center py-6 text-gray-500 text-sm">
                 No orders found.
               </TableCell>
             </TableRow>

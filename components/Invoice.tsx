@@ -106,8 +106,8 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     doc.text("MotoZoop", 14, headerBottomY + 10);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text("Car Accessories Pvt. Ltd.", 14, headerBottomY + 16);
-    doc.text("174/2, Goundachiputhur Road, Ellis Nagar, Dharapuram, Tamil Nadu", 14, headerBottomY + 21);
+    doc.text("174/2, Goundachiputhur Road, Ellis Nagar,", 14, headerBottomY + 16);
+    doc.text("Dharapuram, Tamil Nadu", 14, headerBottomY + 21);
     doc.text("support@motozoop.com | +91 98765 43210", 14, headerBottomY + 26);
 
     // Invoice Header
@@ -117,8 +117,8 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Invoice #: ${order.invoiceId ?? "N/A"}`, 14, headerBottomY + 46);
-    doc.text(`Order #: ${order.orderNumber ?? "N/A"}`, 14, headerBottomY + 52);
+    doc.text(`Invoice : ${order.invoiceId ?? "N/A"}`, 14, headerBottomY + 46);
+    doc.text(`Order : ${order.orderNumber ?? "N/A"}`, 14, headerBottomY + 52);
     doc.text(
       `Date: ${order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"}`,
       14,
@@ -136,7 +136,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     doc.setFont("helvetica", "normal");
     const addressLines = formatAddressForPDF(order.address);
     addressLines.forEach((line, index) => {
-      doc.text(line, 14, headerBottomY + 80 + index * 6);
+      doc.text(line, 14, headerBottomY + 86 + index * 6);
     });
 
     // Products Table
@@ -210,7 +210,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
           <div className="min-w-0">
             <h2 className="text-xl font-bold">MotoZoop</h2>
             <p className="text-xs text-gray-500 leading-tight">
-              Car Accessories Pvt. Ltd. | 174/2, Goundachiputhur Road, Ellis Nagar, Dharapuram, Tamil Nadu
+              174/2, Goundachiputhur Road, Ellis Nagar, Dharapuram, Tamil Nadu
             </p>
             <p className="text-xs text-gray-500">support@motozoop.com | +91 98765 43210</p>
           </div>
@@ -220,10 +220,10 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
         <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
           <div className="space-y-1">
             <p>
-              <strong>Invoice #:</strong> {order.invoiceId ?? "N/A"}
+              <strong>Invoice :</strong> {order.invoiceId ?? "N/A"}
             </p>
             <p>
-              <strong>Order #:</strong> {order.orderNumber ?? "N/A"}
+              <strong>Order :</strong> {order.orderNumber ?? "N/A"}
             </p>
             <p>
               <strong>Date:</strong>{" "}
@@ -254,7 +254,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
           <table className="w-full text-left border border-gray-200 text-xs">
             <thead className="bg-gray-50">
               <tr>
-                <th className="p-1 border">#</th>
+                <th className="p-1 border">S.No</th>
                 <th className="p-1 border">Product</th>
                 <th className="p-1 border">Qty</th>
                 <th className="p-1 border">Price</th>

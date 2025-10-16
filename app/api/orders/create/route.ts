@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Use existing orderId or generate new one ---
-    const existingOrderId = metadata.orderId ?? generateOrderId();
+    const existingOrderId = metadata.orderNumber ?? generateOrderId();
 
     // --- Prepare products for Sanity ---
     const sanityProducts = items.map((item: any) => ({

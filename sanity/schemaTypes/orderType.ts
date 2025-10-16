@@ -163,6 +163,26 @@ export const orderType = defineType({
       type: "datetime",
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: "trackingId",
+      title: "Tracking ID",
+      type: "string",
+      description: "Enter the tracking ID provided by the delivery partner",
+    }),
+
+    defineField({
+      name: "deliveryPartner",
+      title: "Delivery Partner",
+      type: "string",
+      options: {
+        list: [
+          { title: "French Express", value: "French Express" },
+          { title: "DTDC", value: "DTDC" },
+        ],
+      },
+      description: "Select the delivery partner for this order",
+    }),
+
   ],
   preview: {
     select: {
