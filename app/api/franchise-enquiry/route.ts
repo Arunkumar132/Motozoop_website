@@ -1,4 +1,4 @@
-import { client } from "@/lib/sanityClient";
+import { backendClient } from "@/sanity/lib/backendClient";  // ✅ use backend client
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const doc = {
-      _type: "franchise",  // ✅ match schema name
+      _type: "franchise", // must match schema name in Sanity
       name: body.name,
       email: body.email,
       phone: body.phone,
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
       submittedAt: new Date().toISOString(),
     };
 
-    await client.create(doc);
+    // ✅ Use backend client (with token)
+    await backendClient.create(doc);
 
     return NextResponse.json(
       { success: true, message: "Enquiry saved to Sanity" },
@@ -30,3 +31,4 @@ export async function POST(req: Request) {
     );
   }
 }
+  

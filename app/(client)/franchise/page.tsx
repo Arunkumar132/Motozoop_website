@@ -60,10 +60,13 @@ const FranchiseEnquiry = () => {
 
       if (response.ok) {
         toast.success("Enquiry submitted successfully!");
-        setFormData({ name: "", email: "", phone: "", location: "", investment: "", message: "" });
+        setTimeout(() => {
+          window.location.href = "/thank-you"; // redirect after short delay
+        }, 1500);
       } else {
         toast.error("Error submitting enquiry. Please try again.");
       }
+
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong. Please try again.");
@@ -148,25 +151,28 @@ const FranchiseEnquiry = () => {
           <input
             type="text"
             name="location"
-            placeholder="Preferred Location (optional)"
+            placeholder="Preferred Location"
             value={formData.location}
             onChange={handleChange}
+            required
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
           />
           <input
             type="text"
             name="investment"
-            placeholder="Investment Capacity (optional)"
+            placeholder="Investment Capacity"
             value={formData.investment}
             onChange={handleChange}
+            required
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
           />
           <textarea
             name="message"
-            placeholder="Message (optional)"
+            placeholder="Message"
             value={formData.message}
             onChange={handleChange}
             rows={4}
+            required
             className="w-full md:col-span-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-shop_dark_green"
           />
           <button

@@ -25,6 +25,12 @@ export async function POST(req: NextRequest) {
       return `${letters}${digits}`;
     };
 
+    const generateInvoiceId = () => {
+      // Generate a random 10-digit number as a string
+      return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    };
+
+
     const orderNumber = metadata.orderNumber ?? generateOrderNumber();
 
     // --- Prepare products for Sanity ---
@@ -67,6 +73,7 @@ export async function POST(req: NextRequest) {
       products: sanityProducts,
       totalPrice: metadata.totalPrice ?? orderTotalPrice,
       amountDiscount: metadata.amountDiscount ?? 0,
+      invoiceId: generateInvoiceId(),
       status: "paid",
       orderDate: new Date().toISOString(),
       address: parsedAddress
@@ -79,12 +86,12 @@ export async function POST(req: NextRequest) {
             mobile: parsedAddress.mobile ?? "",
           }
         : null,
-      invoiceId: "",
-      invoiceNumber: "",
-      hostedInvoiceUrl: "",
     });
 
+
     console.log(`✅ Order created successfully: ${order._id}`);
+    console.log(`🧾 Invoice ID: ${order.invoiceid}`);
+
 
     // --- Update stock levels ---
     await Promise.all(
