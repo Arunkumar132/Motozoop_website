@@ -19,13 +19,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-<<<<<<< HEAD
-=======
-  // ✅ Fetch orders from Sanity on the server
-    const {userId} = await auth();
-    const orders = await getOrders(userId);
-
->>>>>>> 6b20460c5d38c30c7d35d5bad35c760b88435614
   return (
     <ClerkProvider>
       <html lang="en">

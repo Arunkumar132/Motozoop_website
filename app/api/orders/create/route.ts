@@ -3,6 +3,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendClient } from "@/sanity/lib/backendClient";
 import crypto from "crypto";
+import { sendOrderConfirmation } from "@/lib/email";
+import { generateOrderId } from "@/components/orderid";
+
+// --- Invoice ID Generator ---
+const generateInvoiceId = () =>
+  Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,27 +22,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Generate unique order number ---
-    const generateOrderNumber = () => {
-      const letters = Array.from({ length: 5 }, () =>
-        String.fromCharCode(65 + Math.floor(Math.random() * 26))
-      ).join("");
-      const digits = Math.floor(100 + Math.random() * 900); // 3 digits
-      return `${letters}${digits}`;
-    };
-
-    const generateInvoiceId = () => {
-      // Generate a random 10-digit number as a string
-      return Math.floor(1000000000 + Math.random() * 9000000000).toString();
-    };
-
-
-    const orderNumber = metadata.orderNumber ?? generateOrderNumber();
+    // --- Use existing orderId or generate new one ---
+    const existingOrderId = metadata.orderId ?? generateOrderId();
 
     // --- Prepare products for Sanity ---
     const sanityProducts = items.map((item: any) => ({
       _key: crypto.randomUUID(),
-      product: item.product, // Expecting _type: "reference", _ref: productId
+      product: item.product,
       quantity: item.quantity,
       productName: item.productName,
       productImage: item.productImage,
@@ -47,7 +39,6 @@ export async function POST(req: NextRequest) {
         0,
     }));
 
-    // --- Parse address ---
     const parsedAddress = metadata.address ?? {};
     const phoneNumber = parsedAddress.mobile ?? "";
 
@@ -62,7 +53,7 @@ export async function POST(req: NextRequest) {
     // --- Create order in Sanity ---
     const order = await backendClient.create({
       _type: "order",
-      orderNumber,
+      orderNumber: existingOrderId, // 8-character order ID
       razorpayPaymentId: payment.razorpay_payment_id,
       razorpayOrderId: payment.razorpay_order_id,
       razorpaySignature: payment.razorpay_signature ?? "",
@@ -73,7 +64,7 @@ export async function POST(req: NextRequest) {
       products: sanityProducts,
       totalPrice: metadata.totalPrice ?? orderTotalPrice,
       amountDiscount: metadata.amountDiscount ?? 0,
-      invoiceId: generateInvoiceId(),
+      invoiceId: metadata.invoiceId ?? generateInvoiceId(),
       status: "paid",
       orderDate: new Date().toISOString(),
       address: parsedAddress
@@ -88,42 +79,39 @@ export async function POST(req: NextRequest) {
         : null,
     });
 
-
     console.log(`✅ Order created successfully: ${order._id}`);
-    console.log(`🧾 Invoice ID: ${order.invoiceid}`);
+    console.log(`🧾 Order ID: ${existingOrderId}`);
 
+    // --- Send confirmation email ---
+    try {
+      await sendOrderConfirmation(metadata.customerEmail, {
+        id: existingOrderId,
+        total: metadata.totalPrice ?? orderTotalPrice,
+        items: sanityProducts.map(item => ({
+          name: item.productName,
+          quantity: item.quantity,
+        })),
+      });
+      console.log("📧 Order confirmation email sent successfully.");
+    } catch (err: any) {
+      console.error("❌ Failed to send order confirmation email:", err.message);
+    }
 
     // --- Update stock levels ---
     await Promise.all(
       items.map(async (item: any) => {
         try {
-          // Correct way to get product ID from reference
           const productId = item.product?._ref || item._id;
-          if (!productId) {
-            console.warn("⚠️ No valid product ID found for item:", item);
-            return;
-          }
+          if (!productId) return;
 
-          // Fetch current stock from Sanity
           const productDoc = await backendClient.fetch(
             `*[_type == "product" && _id == $id][0]{ _id, title, stock }`,
             { id: productId }
           );
+          if (!productDoc || typeof productDoc.stock !== "number") return;
 
-          if (!productDoc) {
-            console.warn(`⚠️ Product not found for ID: ${productId}`);
-            return;
-          }
-
-          if (typeof productDoc.stock !== "number") {
-            console.warn(`⚠️ Invalid stock field for product ${productId}`);
-            return;
-          }
-
-          // Calculate new stock
           const newStock = Math.max(productDoc.stock - (item.quantity ?? 1), 0);
 
-          // Update stock in Sanity
           await backendClient
             .patch(productId)
             .set({ stock: newStock })
@@ -140,7 +128,7 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    return NextResponse.json({ success: true, orderId: order._id });
+    return NextResponse.json({ success: true, orderId: existingOrderId });
   } catch (err: any) {
     console.error("❌ Failed to create order in Sanity:", err);
     return NextResponse.json(

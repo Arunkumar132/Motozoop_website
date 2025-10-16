@@ -43,6 +43,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createCheckoutSession, Metadata } from "@/actions/createCheckoutSession";
+import { generateOrderId } from "@/components/orderid";
 
 const CartPage = () => {
   const { deleteCartProduct, getTotalPrice, getItemCount, getSubTotalPrice, resetCart } = useStore();
@@ -133,17 +134,12 @@ const CartPage = () => {
     const totalPrice = getSubTotalPrice();      // after discount
     const amountDiscount = originalPrice - totalPrice;
 
-    function generateOrderNumber() {
-      const letters = Array.from({ length: 5 }, () =>
-        String.fromCharCode(65 + Math.floor(Math.random() * 26))
-      ).join("");
-      const digits = Math.floor(100 + Math.random() * 900); // 3-digit number between 100–999
-      return `${letters}${digits}`;
-    }
+    // Generate a 3-letter + 5-digit order ID
+
 
     // Build metadata
     const metadata: Metadata = {
-      orderNumber: generateOrderNumber(),
+      orderNumber: generateOrderId(),
       customerName: user.fullName ?? "Unknown",
       customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
       clerkUserId: user.id,
@@ -585,3 +581,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
