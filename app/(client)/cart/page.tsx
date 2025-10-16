@@ -70,26 +70,36 @@ const CartPage = () => {
 
   // Fetch addresses
   const fetchAddresses = async () => {
-    if (!currentUserId) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/address");
-      const data: Address[] = await res.json();
-      setAddresses(data);
-      const defaultAddress = data.find((addr) => addr.default);
-      if (defaultAddress) setSelectedAddress(defaultAddress);
-      else if (data.length > 0) setSelectedAddress(data[0]);
-    } catch (error) {
-      console.error("Error fetching addresses:", error);
-      toast.error("Failed to fetch addresses");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!currentUserId) return;
+  setLoading(true);
+  try {
+    // Pass the userId as query parameter
+    const res = await fetch(`/api/address?userId=${currentUserId}`);
+    const data: Address[] = await res.json();
 
-  useEffect(() => {
-    fetchAddresses();
-  }, [currentUserId]);
+    // Ensure it's an array
+    if (!Array.isArray(data)) {
+      console.error("API did not return an array:", data);
+      setAddresses([]);
+      return;
+    }
+
+    setAddresses(data);
+
+    const defaultAddress = data.find((addr) => addr.default);
+    if (defaultAddress) setSelectedAddress(defaultAddress);
+    else if (data.length > 0) setSelectedAddress(data[0]);
+  } catch (error) {
+    console.error("Error fetching addresses:", error);
+    toast.error("Failed to fetch addresses");
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchAddresses();
+}, [currentUserId]);
 
   // Reset cart
   const handleResetCart = () => {
