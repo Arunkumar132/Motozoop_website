@@ -1,0 +1,9 @@
+"plugins": [
+  "@sanity/dashboard"
+],
+"parts": [
+  {
+    "name": "part:@sanity/dashboard/config",
+    "path": "./dashboardConfig.ts"
+  }
+]
