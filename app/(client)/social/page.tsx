@@ -14,12 +14,12 @@ export default function SocialMediaIDsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10">
+    <div className="bg-gray-50 flex flex-col items-center py-10">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Official Social Media IDs</h1>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 w-11/12 max-w-5xl">
         {socialLinks.map(({ name, icon: Icon, handle, url }) => (
-          <Card key={name} className="hover:shadow-lg transition-shadow">
+          <Card key={name} className=" border hover:shadow-lg transition-shadow">
             <CardContent className="flex items-center space-x-4 p-6">
               <Icon className="w-8 h-8 text-shop_light_green" />
               <div>

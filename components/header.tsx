@@ -50,21 +50,30 @@ export default function Header() {
           <SearchBar />
           <Carticon />
           <FavoriteButton />
+
           <ClerkLoaded>
             <SignedIn>
-              <Link
-                href="/orders"
-                className="relative inline-flex items-center justify-center group hover:text-shop_light_green transition"
-              >
-                <Logs className="w-6 h-6" />
+              <div className="relative flex items-center gap-3">
+                {/* Orders Link */}
+                <Link
+                  href="/orders"
+                  className="inline-flex items-center justify-center relative group hover:text-shop_light_green transition"
+                >
+                  <Logs className="w-6 h-6 z-10" />
+                </Link>
+
+                {/* Badge */}
                 {orders.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-shop_btn_dark_green text-white h-4 w-4 rounded-full text-[10px] font-semibold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-shop_btn_dark_green text-white h-4 w-4 rounded-full text-[10px] font-semibold flex items-center justify-center z-50">
                     {orders.length}
                   </span>
                 )}
-              </Link>
-              <UserButton afterSignOutUrl="/" />
+
+                {/* User Button */}
+                <UserButton afterSignOutUrl="/" />
+              </div>
             </SignedIn>
+
             <SignedOut>
               <SignInButton mode="modal">
                 <span className="text-sm font-medium cursor-pointer hover:text-shop_light_green">
