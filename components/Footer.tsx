@@ -23,7 +23,7 @@ const Footer = () => {
           <div className="space-y-5">
             <Logo />
             <SubText className="text-gray-600">
-              Motozoop Car — Your second home on the road.
+              Motozoop — Your second home on the road.
             </SubText>
             <SocialMedia
               className="text-gray-600"
