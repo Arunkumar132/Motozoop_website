@@ -1,6 +1,4 @@
 import { cn } from "@/lib/utils";
-import { twMerge } from "tailwind-merge";
-
 interface Props{
     amount: number | undefined;
     className?: string;

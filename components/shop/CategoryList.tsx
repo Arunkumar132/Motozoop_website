@@ -1,8 +1,15 @@
-import React from 'react';
 "use client";
-import { Title } from '../Title';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { Label } from '../ui/label';
+
+import React from "react";
+import { Title } from "../Title";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Label } from "../ui/label";
+
+interface Category {
+  _id: string;
+  title: string;
+  slug?: { current?: string };
+}
 
 interface Props {
   categories: Category[];
@@ -26,12 +33,12 @@ const CategoryList = ({ categories, selectedCategory, setSelectedCategory }: Pro
             className="flex items-center space-x-2 hover:cursor-pointer"
           >
             <RadioGroupItem
-              value={category?.slug?.current as string}
-              id={category?.slug?.current}
+              value={category?.slug?.current || ""}
+              id={category?.slug?.current || ""}
               className="h-4 w-4 rounded-sm"
             />
             <Label
-              htmlFor={category?.slug?.current}
+              htmlFor={category?.slug?.current || ""}
               className={`${
                 selectedCategory === category?.slug?.current
                   ? "font-semibold text-shop_dark_green"
@@ -43,6 +50,7 @@ const CategoryList = ({ categories, selectedCategory, setSelectedCategory }: Pro
           </div>
         ))}
       </RadioGroup>
+
       {selectedCategory && (
         <button
           onClick={() => setSelectedCategory(null)}

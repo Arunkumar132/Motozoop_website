@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import Image from "next/image";
 
 interface InvoiceProps {
   open: boolean;
@@ -198,7 +199,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
         {/* Header with Logo */}
         <div className="flex items-start space-x-3 border-b pb-3 mb-3">
           <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0 p-1">
-            <img
+            <Image
               src="/logo1.png"
               alt="MotoZoop Logo"
               className="w-full h-full object-contain rounded"

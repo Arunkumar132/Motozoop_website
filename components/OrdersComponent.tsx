@@ -17,29 +17,29 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
     setOpen(true);
   };
 
-  const handleDelete = (order: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log("Delete order:", order.orderNumber);
-  };
+  // --- Helper: Open shipment tracking link ---
+  const openTrackingLink = (trackingId: string, partner: string) => {
+    if (!trackingId) {
+      alert("Tracking ID not available for this order.");
+      return;
+    }
 
-  const sortedOrders = Array.isArray(orders)
-    ? [...orders].sort((a, b) => (new Date(b.orderDate).getTime() || 0) - (new Date(a.orderDate).getTime() || 0))
-    : [];
-
-  // --- Track Shipment Function ---
-  const handleTracking = (trackingId: string, partner: string) => {
     if (partner === "dtdc") {
-      const url = `https://www.dtdc.com/tracking/?consignment=${trackingId}`;
-      window.open(url, "_blank");
+      window.open(`https://www.dtdc.com/tracking/?consignment=${trackingId}`, "_blank");
     } else if (partner === "french_express") {
-      const url = "https://franchexpress.com/courier-tracking/";
-      window.open(url, "_blank");
+      window.open("https://franchexpress.com/courier-tracking/", "_blank");
       alert(`Your tracking ID is: ${trackingId}\nPlease paste it into the French Express tracking box.`);
     } else {
-      alert("Tracking partner not available");
+      alert(`Tracking not available for partner: ${partner || "Unknown"}`);
     }
   };
 
+  // --- Sort orders by date ---
+  const sortedOrders = Array.isArray(orders)
+    ? [...orders].sort(
+        (a, b) => (new Date(b.orderDate).getTime() || 0) - (new Date(a.orderDate).getTime() || 0)
+      )
+    : [];
 
   return (
     <>
@@ -107,17 +107,27 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                     </TableCell>
 
                     {/* Invoice Number */}
+                    <TableCell>{order.invoiceId ?? "N/A"}</TableCell>
+
+                    {/* Tracking ID (Clickable if exists) */}
                     <TableCell>
-                      <p>{order.invoiceId ?? "N/A"}</p>
+                      {order.trackingId ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openTrackingLink(order.trackingId, order.deliveryPartner ?? "");
+                          }}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {order.trackingId}
+                        </button>
+                      ) : (
+                        "N/A"
+                      )}
                     </TableCell>
 
-                    <TableCell>
-                      <p>{order.trackingId ?? "N/A"}</p>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <p>{order.deliveryPartner ?? "N/A"}</p>
-                    </TableCell>
+                    {/* Delivery Partner */}
+                    <TableCell>{order.deliveryPartner ?? "N/A"}</TableCell>
                   </TableRow>
                 </TooltipTrigger>
                 <TooltipContent>

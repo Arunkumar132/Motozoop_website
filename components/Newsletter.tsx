@@ -57,7 +57,7 @@ const Newsletter = () => {
         style: { background: "#1F2937", color: "#fff" },
       });
       setEmail("");
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong. Please try again.", {
         position: "bottom-right",
         style: { background: "#1F2937", color: "#fff" },

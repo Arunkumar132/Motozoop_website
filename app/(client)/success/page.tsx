@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Check, Home, Package, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { backendClient } from "@/sanity/lib/backendClient";
 
 interface Order {
@@ -41,10 +42,13 @@ export default function SuccessPage() {
     <div className="pt-10 pb-2 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col items-center">
       {/* Logo */}
       <div className="text-center mb-6">
-        <img
+        <Image
           src="/Untitled_design-removebg-preview.png"
           alt="MOTOZOOP Logo"
-          className="mx-auto w-32 h-auto"
+          width={128}
+          height={128}
+          className="mx-auto h-auto w-32"
+          priority
         />
       </div>
 

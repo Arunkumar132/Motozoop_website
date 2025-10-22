@@ -1,19 +1,20 @@
-import AddToCartButton from "@/components/AddToCartButton";
+// File: app/product/[slug]/page.tsx
+import React from "react";
 import Container from "@/components/Container";
+import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImageView from "@/components/ImageView";
 import PriceView from "@/components/PriceView";
-import { getProductBySlug } from "@/sanity/queries";
-import { CornerDownLeft, StarIcon } from "lucide-react";
-import React from "react";
 import ColorSelection from "@/components/ColorSelection";
 import StatueSelector from "@/components/StatueSelector";
 import DeliveryCheckWrapper from "@/components/DeliveryCheckWrapper";
 import ReturnModal from "@/components/ReturnModal";
 import BuyNow from "@/components/BuyNow";
+import { getProductBySlug } from "@/sanity/queries";
+import { CornerDownLeft, StarIcon } from "lucide-react";
 
 interface Props {
-  params: { slug: string };
+  params: { slug: string }; // plain object
 }
 
 const SingleProductPage = async ({ params }: Props) => {
@@ -52,7 +53,11 @@ const SingleProductPage = async ({ params }: Props) => {
 
         {/* Price & Stock */}
         <div className="space-y-1 border-t border-b border-gray_200 py-5">
-          <PriceView price={product.price} discount={product.discount} className="text-2xl font-bold" />
+          <PriceView
+            price={product.price}
+            discount={product.discount}
+            className="text-2xl font-bold"
+          />
           <p
             className={`px-4 py-1.5 text-sm text-center inline-block font-bold rounded-lg ${
               isStock ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"

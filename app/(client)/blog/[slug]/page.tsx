@@ -145,7 +145,7 @@ const BlogLeft = async ({ slug }: { slug: string }) => {
         <p className="text-xl font-semibold text-shop_dark_green">Latest Blogs</p>
         <div className="space-y-4 mt-4">
           {latestBlogs?.map((blog: Blog, index: number) => (
-            <Link href={`/blog/${blog?.slug?.current}`} key={index} className="flex items-center gap-2 group">
+            <Link href={/blog/${blog?.slug?.current}} key={index} className="flex items-center gap-2 group">
               {blog?.mainImage && (
                 <Image
                   src={urlFor(blog.mainImage).url()}

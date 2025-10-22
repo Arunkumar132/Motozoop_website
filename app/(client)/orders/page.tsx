@@ -6,7 +6,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getOrders } from "@/sanity/queries";
 import { auth } from "@clerk/nextjs/server";
-import { get } from "http";
 import { FileX } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";

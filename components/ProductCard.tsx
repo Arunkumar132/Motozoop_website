@@ -3,11 +3,10 @@
 
 import { Product } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
-import { Flame, StarIcon } from "lucide-react";
+import { Flame } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
-import AddToWishListButton from "./AddToWishListButton";
 import { Title } from "./Title";
 import PriceView from "./PriceView";
 import AddToCartButton from "./AddToCartButton";

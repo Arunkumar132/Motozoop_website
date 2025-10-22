@@ -42,11 +42,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createCheckoutSession, Metadata } from "@/actions/createCheckoutSession";
 import { generateOrderId } from "@/components/orderid";
 
 const CartPage = () => {
-  const { deleteCartProduct, getTotalPrice, getItemCount, getSubTotalPrice, resetCart } = useStore();
+  const { deleteCartProduct, getTotalPrice, getSubTotalPrice, resetCart } = useStore();
   const groupedItems = useStore((state) => state.getGroupedItems());
   const { isSignedIn } = useAuth();
   const { user } = useUser(); 
@@ -162,7 +161,7 @@ useEffect(() => {
     // Load Razorpay SDK
     try {
       await loadRazorpayScript();
-    } catch (err) {
+    } catch {
       toast.error("Payment SDK failed to load. Try again.");
       setLoading(false);
       return;
@@ -193,7 +192,7 @@ useEffect(() => {
         setLoading(false);
         return;
       }
-    } catch (err) {
+    } catch {
       toast.error("Could not initiate payment. Try again.");
       setLoading(false);
       return;
@@ -296,7 +295,7 @@ useEffect(() => {
         setLoading(false);
       });
       rzp.open();
-    } catch (err) {
+    } catch {
       toast.error("Could not open payment modal. Try again.");
       setLoading(false);
     }
