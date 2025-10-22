@@ -20,15 +20,20 @@ import {
 } from "@clerk/nextjs";
 
 export default function Header() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orderCount, setOrderCount] = useState(0);
   const { user } = useUser();
 
   useEffect(() => {
     if (user?.id) {
       (async () => {
-        const res = await fetch(`/api/orders?userId=${user.id}`);
-        const data = await res.json();
-        setOrders(data || []);
+        try {
+          const res = await fetch(`/api/orders?userId=${user.id}`);
+          const data = await res.json();
+          setOrderCount(data.count || 0);
+        } catch (err) {
+          console.error("Failed to fetch order count:", err);
+          setOrderCount(0);
+        }
       })();
     }
   }, [user?.id]);
@@ -63,9 +68,9 @@ export default function Header() {
                 </Link>
 
                 {/* Badge */}
-                {orders.length > 0 && (
+                {orderCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-shop_btn_dark_green text-white h-4 w-4 rounded-full text-[10px] font-semibold flex items-center justify-center z-50">
-                    {orders.length}
+                    {orderCount}
                   </span>
                 )}
 

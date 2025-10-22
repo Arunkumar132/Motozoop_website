@@ -4,13 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { urlFor } from "@/lib/sanityClient";
 
 type Product = {
   _id: string;
   name: string;
-  imageUrl?: string | null;
-  price?: number | null;
   slug?: { current: string } | null;
 };
 
@@ -133,7 +130,6 @@ export default function SearchBar() {
                     <div className="space-y-3">
                       {[...Array(3)].map((_, i) => (
                         <div key={i} className="flex items-center gap-4 animate-pulse">
-                          <div className="w-14 h-14 bg-gray-200 rounded-md" />
                           <div className="flex-1 space-y-2">
                             <div className="h-4 bg-gray-200 rounded w-3/4" />
                             <div className="h-3 bg-gray-100 rounded w-1/2" />
@@ -159,23 +155,8 @@ export default function SearchBar() {
                             className="flex items-center gap-4 p-4"
                             onClick={() => setIsOpen(false)}
                           >
-                            {p.imageUrl ? (
-                              <img
-                                src={p.imageUrl}
-                                alt={p.name}
-                                className="w-14 h-14 object-cover rounded-md border"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-14 h-14 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs">
-                                No Image
-                              </div>
-                            )}
                             <div className="flex-1">
                               <div className="font-semibold text-gray-800">{p.name}</div>
-                              {p.price && (
-                                <div className="text-sm text-gray-500 mt-1">₹{p.price}</div>
-                              )}
                             </div>
                           </Link>
                         </li>

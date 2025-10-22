@@ -80,7 +80,7 @@ const useStore = create<StoreState>()(
                 }, 0);
             },
             getItemCount: (productId) => {
-                const item = get().items.find((item) => item.product._id === productId);
+                const item = get().items.find((item) => item.product?._id === productId);
                 return item ? item.quantity : 0;
             },
             getGroupedItems: () => get().items,

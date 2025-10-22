@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       await sendOrderConfirmation(metadata.customerEmail, {
         id: existingOrderId,
         total: metadata.totalPrice ?? orderTotalPrice,
-        items: sanityProducts.map(item => ({
+        items: sanityProducts.map((item) => ({
           name: item.productName,
           quantity: item.quantity,
         })),
@@ -128,7 +128,17 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    return NextResponse.json({ success: true, orderId: existingOrderId });
+    // --- Get total number of orders for this user ---
+    const ordersCount = await backendClient.fetch(
+      `count(*[_type == "order" && clerkUserId == $userId])`,
+      { userId: metadata.clerkUserId }
+    );
+
+    return NextResponse.json({
+      success: true,
+      orderId: existingOrderId,
+      ordersCount,
+    });
   } catch (err: any) {
     console.error("❌ Failed to create order in Sanity:", err);
     return NextResponse.json(
