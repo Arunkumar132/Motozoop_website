@@ -1,4 +1,4 @@
-import { ShoppingCartIcon } from "lucide-react"; 
+import { ShoppingCartIcon } from "lucide-react";
 import { defineField, defineType } from "sanity";
 
 export const productType = defineType({
@@ -23,17 +23,10 @@ export const productType = defineType({
         Rule.required().error("Slug is required"),
     }),
     defineField({
-      name: "images",
-      title: "Product Images",
-      type: "array",
-      of: [{ type: "image", options: { hotspot: true } }],
-    }),
-    defineField({
       name: "description",
       title: "Description",
       type: "string",
     }),
-    
     defineField({
       name: "overview",
       title: "Overview",
@@ -58,13 +51,6 @@ export const productType = defineType({
       title: "Categories",
       type: "array",
       of: [{ type: "reference", to: { type: "category" } }],
-    }),
-    defineField({
-      name: "stock",
-      title: "Stock",
-      type: "number",
-      validation: Rule =>
-        Rule.min(0).error("Stock cannot be negative"),
     }),
     defineField({
       name: "brand",
@@ -106,12 +92,53 @@ export const productType = defineType({
       initialValue: false,
     }),
 
-     defineField({
+    // Colors with multiple images and individual stock
+    defineField({
       name: "colors",
       title: "Available Colors",
       type: "array",
-      of: [{ type: "string" }],
-      description: "Enter all available colors (e.g. Red, Metallic Grey, #ff5733).",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "colorName",
+              title: "Color Name",
+              type: "string",
+              description: "Enter color name or hex code",
+              validation: Rule => Rule.required(),
+            }),
+            defineField({
+              name: "images",
+              title: "Color Images",
+              type: "array",
+              of: [{ type: "image", options: { hotspot: true } }],
+              description: "Upload multiple images for this color",
+            }),
+            defineField({
+              name: "stock",
+              title: "Stock for this Color",
+              type: "number",
+              validation: Rule =>
+                Rule.required().min(0).error("Stock cannot be negative"),
+            }),
+          ],
+          preview: {
+            select: {
+              title: "colorName",
+              media: "images.0",
+              stock: "stock",
+            },
+            prepare(selection) {
+              const { title, media, stock } = selection;
+              return {
+                title: `${title} (${stock} available)`,
+                media,
+              };
+            },
+          },
+        },
+      ],
     }),
 
     defineField({
@@ -126,18 +153,14 @@ export const productType = defineType({
     select: {
       title: "name",
       subtitle: "price",
-      media: "images",
+      media: "colors.0.images.0",
     },
     prepare(selection) {
       const { title, subtitle, media } = selection;
-      const image =
-        Array.isArray(media) && media.length > 0
-          ? media[0]
-          : undefined;
       return {
         title,
         subtitle: subtitle !== undefined ? `₹${subtitle}` : "",
-        media: image,
+        media,
       };
     },
   },

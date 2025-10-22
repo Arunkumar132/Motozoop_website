@@ -1,4 +1,3 @@
-// components/ProductCard.tsx
 "use client";
 
 import { Product } from "@/sanity.types";
@@ -16,24 +15,42 @@ import ProductSideMenu from "./ProductSideMenu";
 const ProductCard = ({ product }: { product: Product }) => {
   const productSlug = product.slug?.current || "";
 
+  // 🖼️ Safely get the first available image from the first color
+  const firstColorImage =
+    product?.colors?.[0]?.images?.[0]?.asset?._ref ||
+    product?.colors?.[0]?.images?.[0]?.asset?._id;
+
+  const imageUrl = firstColorImage
+    ? urlFor(product.colors[0].images[0]).url()
+    : null;
+
+  // 🧮 Calculate total stock (sum of all color stocks if needed)
+  const totalStock =
+    product?.colors?.reduce((sum: number, c: any) => sum + (c.stock || 0), 0) ||
+    0;
+
   return (
     <div className="text-sm border border-dark_blue/20 rounded-md bg-white group relative overflow-hidden">
       {/* Image and badges */}
       <div className="relative">
         {/* Product Image Link */}
-        <Link href={`/product/${product?.slug?.current}`} className="block">
-          {product?.images && (
+        <Link href={`/product/${productSlug}`} className="block">
+          {imageUrl ? (
             <Image
-              src={urlFor(product?.images[0]).url()}
+              src={imageUrl}
               alt={product?.name || "Product Image"}
               loading="lazy"
               width={700}
               height={700}
               className={cn(
                 "w-full h-64 object-contain overflow-hidden transition-transform bg-shop_light_bg hoverEffect cursor-pointer",
-                product?.stock !== 0 ? "group-hover:scale-105" : "opacity-50"
+                totalStock !== 0 ? "group-hover:scale-105" : "opacity-50"
               )}
             />
+          ) : (
+            <div className="w-full h-64 flex items-center justify-center bg-gray-100 text-gray-500">
+              No Image
+            </div>
           )}
         </Link>
 
@@ -84,16 +101,16 @@ const ProductCard = ({ product }: { product: Product }) => {
         {/* Stock */}
         <div className="flex items-center gap-2.5">
           <p className="font-medium">
-            {product?.stock > 0 ? "In Stock" : "Out of Stock"}
+            {totalStock > 0 ? "In Stock" : "Out of Stock"}
           </p>
           <p
             className={
-              product?.stock > 0
+              totalStock > 0
                 ? "text-shop_light_green font-semibold"
                 : "text-red-600 font-semibold"
             }
           >
-            {product?.stock > 0 ? product?.stock : "Unavailable"}
+            {totalStock > 0 ? totalStock : "Unavailable"}
           </p>
         </div>
 

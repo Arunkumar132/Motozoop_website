@@ -16,9 +16,37 @@ const DEAL_PRODUCTS = defineQuery(
   }`
 );
 
-const PRODUCTS_BY_SLUG_QUERY = defineQuery(
-  `*[_type == 'product' && slug.current == $slug] | order(name asc) [0]`
-);
+const PRODUCTS_BY_SLUG_QUERY = defineQuery(`
+  *[_type == "product" && slug.current == $slug][0]{
+    _id,
+    name,
+    price,
+    discount,
+    varient,
+    isFeatured,
+    description,
+    overview,
+    status,
+    brand->{
+      title
+    },
+    categories[]->{
+      title
+    },
+    colors[]{
+      colorName,
+      stock,
+      images[]{
+        asset->{
+          _id,
+          url
+        }
+      }
+    },
+    statues
+  }
+`);
+
 
 const GET_ALL_BLOG = defineQuery(
   `*[_type == 'blog'] | order(publishedAt desc)[0...$quantity]{
