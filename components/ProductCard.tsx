@@ -15,25 +15,28 @@ import ProductSideMenu from "./ProductSideMenu";
 const ProductCard = ({ product }: { product: Product }) => {
   const productSlug = product.slug?.current || "";
 
-  // 🖼️ Safely get the first available image from the first color
-  const firstColorImage =
-    product?.colors?.[0]?.images?.[0]?.asset?._ref ||
-    product?.colors?.[0]?.images?.[0]?.asset?._id;
+  // Safe first color and image
+  const firstColor = product?.colors?.[0];
+  const firstImage = firstColor?.images?.[0];
+  const imageUrl = firstImage?.asset ? urlFor(firstImage).url() : null;
 
-  const imageUrl = firstColorImage
-    ? urlFor(product.colors[0].images[0]).url()
-    : null;
+  // Correct total stock calculation
+  const totalStock = product?.colors?.reduce((sum: number, color: any) => {
+  const stock = Number(color?.stock ?? 0);
+  return sum + (isNaN(stock) ? 0 : stock);
+}, 0) ?? 0;
 
-  // 🧮 Calculate total stock (sum of all color stocks if needed)
-  const totalStock =
-    product?.colors?.reduce((sum: number, c: any) => sum + (c.stock || 0), 0) ||
-    0;
+const isInStock = totalStock > 0;
+
+console.log("Product colors:", product.colors);
+console.log("Total stock:", totalStock);
+
+
 
   return (
     <div className="text-sm border border-dark_blue/20 rounded-md bg-white group relative overflow-hidden">
       {/* Image and badges */}
       <div className="relative">
-        {/* Product Image Link */}
         <Link href={`/product/${productSlug}`} className="block">
           {imageUrl ? (
             <Image
@@ -44,7 +47,7 @@ const ProductCard = ({ product }: { product: Product }) => {
               height={700}
               className={cn(
                 "w-full h-64 object-contain overflow-hidden transition-transform bg-shop_light_bg hoverEffect cursor-pointer",
-                totalStock !== 0 ? "group-hover:scale-105" : "opacity-50"
+                isInStock ? "group-hover:scale-105" : "opacity-50"
               )}
             />
           ) : (
@@ -57,16 +60,12 @@ const ProductCard = ({ product }: { product: Product }) => {
         <ProductSideMenu product={product} />
 
         {/* Status badges */}
-        {product?.status === "sale" && (
+        {["sale", "new"].includes(product?.status || "") && (
           <p className="absolute top-2 left-2 z-10 text-xs border border-darkColor/50 px-2 rounded-full group-hover:border-shop_light_green group-hover:text-shop_light_green hoverEffect">
-            Sale
+            {product.status === "sale" ? "Sale" : "New!"}
           </p>
         )}
-        {product?.status === "new" && (
-          <p className="absolute top-2 left-2 z-10 text-xs border border-darkColor/50 px-2 rounded-full group-hover:border-shop_light_green group-hover:text-shop_light_green hoverEffect">
-            New!
-          </p>
-        )}
+
         {product?.status === "hot" && (
           <Link
             href="/deal"
@@ -91,39 +90,40 @@ const ProductCard = ({ product }: { product: Product }) => {
           </p>
         )}
 
-        {/* Title Link */}
+        {/* Product title */}
         <Link href={`/product/${productSlug}`} className="block">
           <Title className="text-sm line-clamp-1 cursor-pointer">
             {product?.name}
           </Title>
         </Link>
 
-        {/* Stock */}
+        {/* Stock info */}
         <div className="flex items-center gap-2.5">
-          <p className="font-medium">
-            {totalStock > 0 ? "In Stock" : "Out of Stock"}
-          </p>
+          <p className="font-medium">{isInStock ? "In Stock" : "Out of Stock"}</p>
           <p
-            className={
-              totalStock > 0
-                ? "text-shop_light_green font-semibold"
-                : "text-red-600 font-semibold"
-            }
+            className={cn(
+              "font-semibold",
+              isInStock ? "text-shop_light_green" : "text-red-600"
+            )}
           >
-            {totalStock > 0 ? totalStock : "Unavailable"}
+            {isInStock ? totalStock : "Unavailable"}
           </p>
         </div>
 
         {/* Price */}
         <PriceView
           price={product?.price ?? 0}
-          discount={product?.discount ?? 0} 
+          discount={product?.discount ?? 0}
           className="text-sm"
         />
 
         {/* Add to Cart */}
         <div onClick={(e) => e.stopPropagation()}>
-          <AddToCartButton product={product} className="w-36 rounded-full" />
+          <AddToCartButton
+            product={product}
+            className="w-36 rounded-full"
+            disabled={!isInStock} // disable if stock is zero
+          />
         </div>
       </div>
     </div>

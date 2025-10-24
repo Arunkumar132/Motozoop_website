@@ -60,15 +60,16 @@ const AddToCartButton = ({ product, selectedColor, className }: AddToCartProps) 
   const { getItemCount, addItem } = useStore();
   const itemCount = getItemCount(product?._id, selectedColor);
 
-  // Get stock for selected color
+  // Calculate stock properly
   const colorStock =
     selectedColor
       ? product?.colors?.find(c => c.colorName === selectedColor)?.stock ?? 0
-      : product?.stock ?? 0;
+      : product?.colors?.reduce((sum, c) => sum + (Number(c.stock) || 0), 0);
 
   const isOutOfStock = colorStock <= 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // prevent parent Link navigation
     if (!product) return;
 
     if (itemCount < colorStock) {
