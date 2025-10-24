@@ -3,7 +3,7 @@
 import React from "react";
 
 interface ColorSelectionProps {
-  colors: { colorName: string; stock: number }[];
+  colors: { colorName: string | null; stock: number }[];
   selectedColor: string | null;
   onSelectColor: (colorName: string) => void;
 }
@@ -47,16 +47,16 @@ export default function ColorSelection({
 }: ColorSelectionProps) {
   return (
     <div className="flex gap-3 flex-wrap">
-      {colors.map((color) => {
-        const isSelected = selectedColor === color.colorName;
-        const hexColor =
-          COLOR_MAP[color.colorName.toLowerCase()] || "#ccc"; // fallback gray
+      {colors.map((color, index) => {
+        const colorName = color.colorName ?? ""; // fallback to empty string
+        const isSelected = selectedColor === colorName;
+        const hexColor = COLOR_MAP[colorName.toLowerCase()] || "#ccc"; // safe fallback
 
         return (
           <button
-            key={color.colorName}
-            onClick={() => onSelectColor(color.colorName)}
-            disabled={color.stock <= 0}
+            key={index} // use index if colorName is missing
+            onClick={() => colorName && onSelectColor(colorName)}
+            disabled={color.stock <= 0 || !colorName}
             className={`w-8 h-8 rounded-full border-2 transition ${
               isSelected
                 ? "border-black scale-110"

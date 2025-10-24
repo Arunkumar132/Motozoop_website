@@ -21,8 +21,8 @@ const AddToCartButton = ({ product, selectedColor, selectedStatue, className }: 
   const { addItem, getItemCount } = useStore();
   const itemCount = getItemCount(product?._id, selectedColor, selectedStatue);
 
-  // Use color-specific stock if available
-  const colorStock = product?.colorStock?.[selectedColor ?? ""] ?? product?.stock ?? 0;
+  // Get stock for the selected color from colors array
+  const colorStock = product?.colors?.find(c => c.colorName === selectedColor)?.stock ?? product?.stock ?? 0;
   const isOutOfStock = colorStock === 0;
 
   const handleAddToCart = () => {
