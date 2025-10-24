@@ -16,14 +16,14 @@ const BuyNow: React.FC<BuyNowProps> = ({ product, selectedColor }) => {
   const router = useRouter();
   const { addItem, getItemCount } = useStore();
 
-  // Get item count for this product + color
+  // Get current quantity of this product in cart
   const itemCount = getItemCount(product._id, selectedColor);
 
-  // Get stock for the selected color or sum all colors
+  // Get stock for selected color or total stock
   const colorStock =
     selectedColor
       ? product?.colors?.find(c => c.colorName === selectedColor)?.stock ?? 0
-      : product?.colors?.reduce((sum, c) => sum + (Number(c.stock) || 0), 0);
+      : product?.colors?.reduce((sum, c) => sum + (Number(c.stock) || 0), 0) ?? 0;
 
   const isOutOfStock = colorStock <= 0;
 
@@ -35,16 +35,14 @@ const BuyNow: React.FC<BuyNowProps> = ({ product, selectedColor }) => {
       return;
     }
 
-    // Add product to cart if not already added
-    if (itemCount < colorStock) {
+    if (itemCount === 0) {
+      // Product not in cart → add 1
       addItem(product, selectedColor);
       toast.success(
         `${product.name}${selectedColor ? ` (${selectedColor})` : ""} added to cart`
       );
-    } else {
-      toast.error("Cannot add more items, stock limit reached.");
-      return;
     }
+    // If already in cart, do nothing extra
 
     // Redirect to cart page
     router.push("/cart");
