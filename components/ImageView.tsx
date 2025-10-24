@@ -2,9 +2,9 @@
 
 import { internalGroqTypeReferenceTo, SanityImageCrop, SanityImageHotspot } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
-import { AnimatePresence,motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Props {
   images?: Array<{
@@ -18,48 +18,61 @@ interface Props {
     crop?: SanityImageCrop;
     _type: "image";
     _key: string;
-  }>
+  }>;
   isStock?: number | undefined;
 }
 
-const ImageView = ({images=[],isStock}: Props) => {
+const ImageView = ({ images = [], isStock }: Props) => {
   const [active, setActive] = useState(images[0]);
+
+  // Reset active image whenever images array changes (e.g., color selection)
+  useEffect(() => {
+    setActive(images[0]);
+  }, [images]);
+
   return (
     <div className="w-full md:w-1/2 space-y-2 md:space-y-4">
-      <AnimatePresence mode='wait'>
-        <motion.div key={active?._key}
-          initial={{opacity: 0}}
-          animate={{opacity: 1}}
-          exit={{opacity: 0}}
-          transition={{duration: 0.5}}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={active?._key}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
           className="w-full max-h-[550px] min-h-[450px] border border-darkColor/10 rounded-md group overflow-hidden"
         >
-          <Image 
-            src={urlFor(active).url()}
-            alt='productImage'
-            width={700}
-            height={700}
-            priority
-            className={`w-full h-96 max-h-[550px] min-h-[500px] object-contain group-hover:scale-110 hoverEffect rounded-md ${
-              isStock === 0? 'opacity-50' : ''
-            }`}
-          />
+          {active && (
+            <Image
+              src={urlFor(active).url()}
+              alt="productImage"
+              width={700}
+              height={700}
+              priority
+              className={`w-full h-96 max-h-[550px] min-h-[500px] object-contain group-hover:scale-110 hoverEffect rounded-md ${
+                isStock === 0 ? "opacity-50" : ""
+              }`}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Thumbnails */}
       <div className="grid grid-cols-6 gap-2 h-20 md:h-24">
-        {images?.map((image)=>(
-          <button key={image?._key}
-          onClick={()=> setActive(image)}
-          className={`border ${active?._key === image?._key ? 'border-darkColor opacity-100' : 'opacity-50'}`}
+        {images?.map((image) => (
+          <button
+            key={image?._key}
+            onClick={() => setActive(image)}
+            className={`border ${
+              active?._key === image?._key ? "border-darkColor opacity-100" : "opacity-50"
+            }`}
           >
-            <Image 
+            <Image
               src={urlFor(image).url()}
-              alt={'THumbnail ${image._key}'}
+              alt={`Thumbnail ${image._key}`}
               width={100}
               height={100}
-              className="w-full h-auto object-contain"  
+              className="w-full h-full object-contain"
             />
-
           </button>
         ))}
       </div>
