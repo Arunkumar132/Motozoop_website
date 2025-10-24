@@ -1,32 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { client } from "@/sanity/lib/client";
-import { getAuth } from "@clerk/nextjs/server"; // ✅ Clerk authentication
+import { getAuth } from "@clerk/nextjs/server";
+
 const SANITY_WRITE_TOKEN = process.env.SANITY_API_WRITE_TOKEN;
 
-// ───────────────────────────── GET (Fetch user-specific addresses)
+// ───────────────────────────── GET: Fetch all addresses for the logged-in user
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = getAuth(req); // ✅ Get user ID from Clerk
+    const { userId } = getAuth(req);
 
     if (!userId) {
       return NextResponse.json([], { status: 200 }); // Return empty array if not logged in
     }
 
-    // Fetch addresses for the current user
-    const data = await client.fetch(
-      `*[_type == "address" && userId == $userId]`,
+    const addresses = await client.fetch(
+      `*[_type == "address" && userId == $userId] | order(_createdAt desc)`,
       { userId },
       { token: SANITY_WRITE_TOKEN }
     );
 
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("Failed to fetch addresses:", error);
-    return NextResponse.json({ error: "Failed to fetch addresses" }, { status: 500 });
+    return NextResponse.json(addresses);
+  } catch (err) {
+    console.error("Failed to fetch addresses:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch addresses" },
+      { status: 500 }
+    );
   }
 }
 
-// ───────────────────────────── POST (Add new address)
+// ───────────────────────────── POST: Add a new address
 export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
@@ -40,27 +43,30 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Create address linked to current user
-    const created = await client.create(
+    const createdAddress = await client.create(
       {
         _type: "address",
-        userId, // ✅ Attach logged-in user
+        userId, // Attach logged-in user
         ...body,
       },
       { token: SANITY_WRITE_TOKEN }
     );
 
-    return NextResponse.json({ success: true, address: created });
-  } catch (error) {
-    console.error("Failed to add address:", error);
-    return NextResponse.json({ success: false, error: "Failed to add address" }, { status: 500 });
+    return NextResponse.json({ success: true, address: createdAddress });
+  } catch (err) {
+    console.error("Failed to add address:", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to add address" },
+      { status: 500 }
+    );
   }
 }
 
-// ───────────────────────────── DELETE (Delete user-owned address)
+// ───────────────────────────── DELETE: Delete an address owned by the user
 export async function DELETE(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
+
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please log in." },
@@ -70,7 +76,7 @@ export async function DELETE(req: NextRequest) {
 
     const { id } = await req.json();
 
-    // Verify that this address belongs to the user
+    // Verify ownership
     const address = await client.fetch(
       `*[_type == "address" && _id == $id && userId == $userId][0]`,
       { id, userId },
@@ -85,9 +91,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     await client.delete(id, { token: SANITY_WRITE_TOKEN });
+
     return NextResponse.json({ success: true, deleted: true });
-  } catch (error) {
-    console.error("Failed to delete address:", error);
-    return NextResponse.json({ success: false, error: "Failed to delete address" }, { status: 500 });
+  } catch (err) {
+    console.error("Failed to delete address:", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete address" },
+      { status: 500 }
+    );
   }
 }

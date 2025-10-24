@@ -181,7 +181,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("Total Amount:", 140, finalY);
-    doc.text(`Rs. ${totalPrice.toFixed(2)}`, 195, finalY, { align: "right" });
+    doc.text(`Rs. ${(totalPrice+75).toFixed(2)}`, 195, finalY, { align: "right" });
 
     // Footer
     doc.setFontSize(10);
@@ -202,7 +202,9 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
             <Image
               src="/logo1.png"
               alt="MotoZoop Logo"
-              className="w-full h-full object-contain rounded"
+              width={64}
+              height={64}
+              className="object-contain rounded"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
@@ -276,13 +278,27 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
           </table>
         </div>
 
-        {/* Total Amount */}
-        <div className="flex justify-end border-t pt-3">
-          <div className="w-full sm:w-1/2 flex justify-between text-base font-bold">
-            <span>Total Amount:</span>
-            <span className="text-right">Rs. {totalPrice.toFixed(2)}</span>
-          </div>
-        </div>
+{/* Amount Summary */}
+<div className="mb-3 text-xs w-full">
+  <table className="w-full">
+    <tbody>
+      <tr>
+        <td className="p-1 text-right w-2/5">Subtotal:</td>
+        <td className="p-1 text-right w-3/5">Rs. {totalPrice.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td className="p-1 text-right w-2/5">Delivery Charge:</td>
+        <td className="p-1 text-right w-3/5">Rs. 75.00</td>
+      </tr>
+      <tr className="font-bold">
+        <td className="p-1 text-right w-2/5">Total Amount:</td>
+        <td className="p-1 text-right w-3/5">Rs. {(totalPrice + 75).toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
 
         {/* Footer */}
         <div className="border-t pt-3 text-center text-xs text-gray-500 mt-3">

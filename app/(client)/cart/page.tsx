@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateOrderId } from "@/components/orderid";
 
+
 const CartPage = () => {
   const {
     deleteCartProduct,
@@ -72,34 +73,59 @@ const CartPage = () => {
     zip: "",
   });
 
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const hasItems = Array.isArray(groupedItems) && groupedItems.length > 0;
 
-  // Fetch addresses
+  // Fetch addresses for the logged-in user
   const fetchAddresses = async () => {
-    if (!currentUserId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/address?userId=${currentUserId}`);
+      const res = await fetch("/api/address"); // no userId needed
+      if (!res.ok) throw new Error("Failed to fetch addresses");
+
       const data: Address[] = await res.json();
       if (!Array.isArray(data)) {
         setAddresses([]);
         return;
       }
+
       setAddresses(data);
+
+      // Select default address if exists, else first one
       const defaultAddress = data.find((addr) => addr.default);
       if (defaultAddress) setSelectedAddress(defaultAddress);
       else if (data.length > 0) setSelectedAddress(data[0]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching addresses:", error);
-      toast.error("Failed to fetch addresses");
+      toast.error(error.message || "Failed to fetch addresses");
     } finally {
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
     fetchAddresses();
   }, [currentUserId]);
+
+
+  // Initialize quantities from store
+  useEffect(() => {
+    const q: { [key: string]: number } = {};
+    groupedItems.forEach((item) => {
+      const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
+      q[key] = item.quantity || 1;
+    });
+    setQuantities(q);
+  }, [groupedItems]);
+
+  const handleQuantityChange = (key: string, newQty: number, item: any) => {
+    setQuantities((prev) => ({ ...prev, [key]: newQty }));
+    updateCartQuantity(item.product._id, newQty, {
+      selectedColor: item.selectedColor,
+      selectedStatue: item.selectedStatue,
+    });
+  };
 
   // Reset cart
   const handleResetCart = () => {
@@ -108,6 +134,29 @@ const CartPage = () => {
       toast.success("Cart has been reset");
     }
   };
+
+  // Compute totals
+  const total = groupedItems.reduce((acc, item) => {
+    const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
+    const qty = quantities[key] || item.quantity || 1;
+    return acc + (item.product?.price ?? 0) * qty; // original price
+  }, 0);
+
+  const amountDiscount = groupedItems.reduce((acc, item) => {
+    const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
+    const qty = quantities[key] || item.quantity || 1;
+    const price = item.product?.price ?? 0;
+    const discountPercent = item.product?.discount ?? 0; // discount percentage
+    const discountAmount = (price * discountPercent) / 100;
+    return acc + discountAmount * qty;
+  }, 0);
+
+
+  const DELIVERY_CHARGE = 75;
+  const totalPrice =  total - amountDiscount + DELIVERY_CHARGE;
+
+
+
 
   // Load Razorpay script
   const loadRazorpayScript = (): Promise<void> =>
@@ -136,12 +185,7 @@ const CartPage = () => {
 
     setLoading(true);
     let paymentHandled = false;
-    const DELIVERY_CHARGE = 75;
 
-    const originalPrice = getTotalPrice();
-    const discountedPrice = getSubTotalPrice();
-    const amountDiscount = originalPrice - discountedPrice;
-    const totalPrice = discountedPrice + DELIVERY_CHARGE;
 
     const metadata: any = {
       orderNumber: generateOrderId(),
@@ -226,6 +270,7 @@ const CartPage = () => {
             productName: item.product?.name,
             productImage: item.product?.images?.[0] ?? null,
             discountedPrice: item.product?.discountedPrice ?? item.product?.price,
+            selectedColor: item.selectedColor,
           }));
 
           const orderRes = await fetch("/api/orders/create", {
@@ -364,6 +409,10 @@ const CartPage = () => {
 
                 const imageToShow = colorToShow?.images?.[0];
                 const imageUrl = imageToShow?.asset ? urlFor(imageToShow).url() : "/placeholder.png";
+                
+                const key = `${product._id}-${item.selectedColor}-${item.selectedStatue}`;
+                const quantity = quantities[key] || 1;
+
 
                 return (
                   <div
@@ -417,18 +466,19 @@ const CartPage = () => {
                               <TooltipContent className="font-bold">Add to Favorites</TooltipContent>
                             </Tooltip>
                             <Tooltip>
-                              <TooltipTrigger>
-                                <Trash
+                              <TooltipTrigger asChild>
+                                <span
                                   onClick={() => {
                                     if (!product._id) return;
                                     deleteCartProduct(product._id, {
                                       selectedColor: item.selectedColor,
-                                      selectedStatue: item.selectedStatue,
                                     });
                                     toast.success("Product removed from cart");
                                   }}
-                                  className="w-4 h-4 md:w-5 md:h-5 mr-1 text-gray-500 hover:text-red-600 hoverEffect"
-                                />
+                                  className="cursor-pointer"
+                                >
+                                  <Trash className="w-4 h-4 md:w-5 md:h-5 mr-1 text-gray-500 hover:text-red-600 hoverEffect" />
+                                </span>
                               </TooltipTrigger>
                               <TooltipContent className="font-bold text-red-600">Delete Product</TooltipContent>
                             </Tooltip>
@@ -437,9 +487,38 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end justify-between h-36 md:h-44 p-0.5 md:p-1">
-                      <PriceFormatter amount={(product?.price ?? 0) * item.quantity} className="font-bold text-lg"/>
-                      <QuantityButtons product={product} selectedColor={item.selectedColor} selectedStatue={item.selectedStatue}/>
+                     <div className="flex flex-col items-end justify-between h-36 md:h-44 p-0.5 md:p-1">
+                      <PriceFormatter amount={(product?.price ?? 0) * quantity} className="font-bold text-lg"/>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm"
+                          className="h-8 w-8 p-0 border-gray-300"
+                          onClick={() => handleQuantityChange(key, quantity - 1, item)}
+                          disabled={quantity <= 1} // disables if quantity is 1
+                        >
+                          -
+                        </Button>
+
+                        <span>{quantity}</span>
+                        <Button size="sm"
+                          className="h-8 w-8 p-0 border-gray-300"
+                          onClick={() => handleQuantityChange(key, quantity + 1, item)}
+                          disabled={
+                            // disable if quantity reaches stock limit
+                            (() => {
+                              const colorVariant = product.colors?.find(
+                                (c: any) => c.colorName === item.selectedColor
+                              );
+                              const availableStock =
+                                colorVariant?.stock ??
+                                product.stock ??
+                                Infinity; // fallback if undefined
+                              return quantity >= availableStock;
+                            })()
+                          }
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -457,22 +536,63 @@ const CartPage = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span>SubTotal</span>
-                    <PriceFormatter amount={getTotalPrice()} />
+                    <PriceFormatter amount={total} />
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Discount</span>
-                    <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} className="font-semibold text-red-600"/>
+                    <PriceFormatter amount={amountDiscount} className="font-semibold text-red-600"/>
                   </div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">Delivery Charges</span>
-                    <PriceFormatter amount={75} className="font-semibold"/>
+                    <PriceFormatter amount={DELIVERY_CHARGE} className="font-semibold"/>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <PriceFormatter amount={getSubTotalPrice() + 75} className="text-black"/>
+                    <PriceFormatter amount={totalPrice} className="text-black"/>
                   </div>
                   <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" size="lg" disabled={loading} onClick={handleCheckout}>
+                    {loading ? "Processing..." : "Proceed to Checkout"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Order Summary - Mobile Sticky Bottom */}
+              <div className="fixed bottom-0 left-0 w-full bg-white p-4 border-t shadow-lg md:hidden z-50">
+                <h2 className="text-lg font-semibold mb-3">Order Summary</h2>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span>SubTotal</span>
+                    <PriceFormatter amount={total} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Discount</span>
+                    <PriceFormatter
+                      amount={amountDiscount}
+                      className="font-semibold text-red-600"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">Delivery Charges</span>
+                    <PriceFormatter
+                      amount={DELIVERY_CHARGE}
+                      className="font-semibold"
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between font-semibold text-lg">
+                    <span>Total</span>
+                    <PriceFormatter
+                      amount={totalPrice}
+                      className="text-black"
+                    />
+                  </div>
+                  <Button
+                    className="w-full rounded-full font-semibold tracking-wide hoverEffect"
+                    size="lg"
+                    disabled={loading}
+                    onClick={handleCheckout}
+                  >
                     {loading ? "Processing..." : "Proceed to Checkout"}
                   </Button>
                 </div>

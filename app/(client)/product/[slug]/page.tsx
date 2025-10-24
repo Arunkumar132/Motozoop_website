@@ -113,12 +113,6 @@ export default function SingleProductPage({ params }: Props) {
                 />
               </div>
             )}
-            {hasStatues && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Choose Statue</h3>
-                <StatueSelector statues={product.statues} />
-              </div>
-            )}
           </div>
         )}
 
@@ -151,7 +145,7 @@ export default function SingleProductPage({ params }: Props) {
             <div>
               <p className="text-base font-semibold text-black">Return Delivery</p>
               <p className="text-base text-black">
-                Free 30 days Delivery Returns. <ReturnModal />
+                Free 7 days Delivery Returns. <ReturnModal />
               </p>
             </div>
           </div>
