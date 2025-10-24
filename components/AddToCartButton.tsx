@@ -1,6 +1,5 @@
 'use client'
 
-import { Product } from "@/sanity.types";
 import React from "react";
 import { Button } from "./ui/button";
 import { ShoppingBag } from "lucide-react";
@@ -8,27 +7,66 @@ import { cn } from "@/lib/utils";
 import useStore from "@/store";
 import toast from "react-hot-toast";
 import PriceFormatter from "./PriceFormatter";
-import QuantityButtons from "./QuantityButton";
+import { Product } from "@/sanity.types";
 
-interface Props {
+interface AddToCartProps {
   product: Product;
-  selectedColor?: string;
+  selectedColor?: string | null;
   className?: string;
 }
 
-const AddToCartButton = ({ product, selectedColor, className }: Props) => {
-  const { addItem, getItemCount } = useStore();
-
-  // Get count of this item in cart
+// QuantityButtons Component
+const QuantityButtons = ({
+  product,
+  selectedColor,
+  maxCount = 0,
+}: {
+  product: Product;
+  selectedColor?: string | null;
+  maxCount?: number;
+}) => {
+  const { getItemCount, addItem, removeItem } = useStore();
   const itemCount = getItemCount(product?._id, selectedColor);
 
-  // Compute stock for selected color
-  const colorStock =
-    product?.colors?.find(c => c.colorName === selectedColor)?.stock ??
-    product?.stock ??
-    0;
+  const handleIncrease = () => {
+    if (itemCount < maxCount) {
+      addItem(product, selectedColor);
+    } else {
+      toast.error("Cannot add more items, stock limit reached.");
+    }
+  };
 
-  const isOutOfStock = colorStock === 0;
+  const handleDecrease = () => {
+    if (itemCount > 0) {
+      removeItem(product?._id, selectedColor);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button onClick={handleDecrease} disabled={itemCount <= 0} className="w-8 h-8 text-lg font-bold">
+        -
+      </Button>
+      <span className="w-6 text-center">{itemCount}</span>
+      <Button onClick={handleIncrease} disabled={itemCount >= maxCount} className="w-8 h-8 text-lg font-bold">
+        +
+      </Button>
+    </div>
+  );
+};
+
+// AddToCartButton Component
+const AddToCartButton = ({ product, selectedColor, className }: AddToCartProps) => {
+  const { getItemCount, addItem } = useStore();
+  const itemCount = getItemCount(product?._id, selectedColor);
+
+  // Get stock for selected color
+  const colorStock =
+    selectedColor
+      ? product?.colors?.find(c => c.colorName === selectedColor)?.stock ?? 0
+      : product?.stock ?? 0;
+
+  const isOutOfStock = colorStock <= 0;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -49,14 +87,11 @@ const AddToCartButton = ({ product, selectedColor, className }: Props) => {
         <div className="text-sm w-full">
           <div className="flex items-center justify-between">
             <span className="text-xs text-darkColor/80">Quantity</span>
-            <QuantityButtons 
-              product={product} 
-              selectedColor={selectedColor} 
-            />
+            <QuantityButtons product={product} selectedColor={selectedColor} maxCount={colorStock} />
           </div>
           <div className="flex items-center justify-between border-t pt-1">
             <span className="text-xs font-semibold">Subtotal</span>
-            <PriceFormatter 
+            <PriceFormatter
               amount={product?.price ? product.price * itemCount : 0}
               className="text-sm font-semibold"
             />
