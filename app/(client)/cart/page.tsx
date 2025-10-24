@@ -139,12 +139,12 @@ useEffect(() => {
     let paymentHandled = false;
 
     // Use the store's total and subtotal
-    const originalPrice = getTotalPrice();      // before discount
-    const totalPrice = getSubTotalPrice();      // after discount
-    const amountDiscount = originalPrice - totalPrice;
+    const DELIVERY_CHARGE = 75;
 
-    // Generate a 3-letter + 5-digit order ID
-
+    const originalPrice = getTotalPrice(); // without discounts
+    const discountedPrice = getSubTotalPrice(); // with discounts applied
+    const amountDiscount = originalPrice - discountedPrice;
+    const totalPrice = discountedPrice + DELIVERY_CHARGE; // final total with delivery
 
     // Build metadata
     const metadata: Metadata = {
@@ -182,7 +182,7 @@ useEffect(() => {
         body: JSON.stringify({
           items: groupedItems,
           metadata,
-          amount: getSubTotalPrice(),
+          amount: (getSubTotalPrice() + 75),
         }),
       });
 
@@ -464,10 +464,17 @@ useEffect(() => {
                           <PriceFormatter amount={getTotalPrice() - getSubTotalPrice()} 
                           className="font-semibold text-red-600"/>
                         </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold">Delivery Charges</span>
+                          <PriceFormatter
+                            amount={ 75 }
+                            className="font-semibold"
+                          />
+                        </div>
                         <Separator />
                         <div className="flex items-center justify-between font-semibold text-lg">
                           <span>Total</span>
-                          <PriceFormatter amount={getSubTotalPrice()} className="text-lg font-bold text-black"/>
+                          <PriceFormatter amount={getSubTotalPrice() + 75} className="text-black" />
                         </div>
                         <div>
                           <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" 
@@ -559,13 +566,20 @@ useEffect(() => {
                   <span className="font-semibold">Discount:</span>
                   <PriceFormatter
                     amount={getTotalPrice() - getSubTotalPrice()}
-                    className="font-semibold text-red-600"
+                    className="font-semibold  text-red-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold">Delivery Charges</span>
+                  <PriceFormatter
+                    amount={ 75 }
+                    className="font-semibold"
                   />
                 </div>
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between font-bold text-lg mb-2">
                   <span>Total:</span>
-                  <PriceFormatter amount={getSubTotalPrice()} className="text-black" />
+                  <PriceFormatter amount={getSubTotalPrice()+ 75} className="text-black" />
                 </div>
                 <Button
                   className="w-full rounded-full font-semibold tracking-wide"
