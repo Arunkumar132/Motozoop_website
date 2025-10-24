@@ -6,18 +6,17 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor?: string;
-  selectedStatue?: string;
 }
 
 interface StoreState {
   items: CartItem[];
-  addItem: (product: Product, selectedColor?: string, selectedStatue?: string) => void;
-  removeItem: (productId: string, selectedColor?: string, selectedStatue?: string) => void;
-  deleteCartProduct: (productId: string, selectedColor?: string, selectedStatue?: string) => void;
+  addItem: (product: Product, selectedColor?: string) => void;
+  removeItem: (productId: string, selectedColor?: string) => void;
+  deleteCartProduct: (productId: string, selectedColor?: string) => void;
   resetCart: () => void;
   getTotalPrice: () => number;
   getSubTotalPrice: () => number;
-  getItemCount: (productId: string, selectedColor?: string, selectedStatue?: string) => number;
+  getItemCount: (productId: string, selectedColor?: string) => number;
   getGroupedItems: () => CartItem[];
   favoriteProduct: Product[];
   addToFavorite: (product: Product) => Promise<void>;
@@ -31,36 +30,57 @@ const useStore = create<StoreState>()(
       items: [],
       favoriteProduct: [],
 
-      addItem: (product, selectedColor, selectedStatue) =>
+      addItem: (product, selectedColor) =>
         set((state) => {
+          if (!product?._id) {
+            console.warn("addItem called with invalid product");
+            return state;
+          }
+
+          // Compute stock for selected color
+          const colorStock =
+            product.colors?.find(c => c.colorName === selectedColor)?.stock ??
+            product.stock ??
+            0;
+
+          // Find existing cart item
           const existingItem = state.items.find(
-            (item) =>
+            item =>
               item.product._id === product._id &&
-              item.selectedColor === selectedColor &&
-              item.selectedStatue === selectedStatue
+              item.selectedColor === selectedColor
           );
+
           if (existingItem) {
-            return {
-              items: state.items.map((item) =>
-                item === existingItem
-                  ? { ...item, quantity: item.quantity + 1 }
-                  : item
-              ),
-            };
+            if (existingItem.quantity < colorStock) {
+              return {
+                items: state.items.map(item =>
+                  item === existingItem
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+                ),
+              };
+            } else {
+              console.warn("Cannot add more items, stock limit reached.");
+              return state;
+            }
           } else {
-            return {
-              items: [...state.items, { product, quantity: 1, selectedColor, selectedStatue }],
-            };
+            if (colorStock > 0) {
+              return {
+                items: [...state.items, { product, quantity: 1, selectedColor }],
+              };
+            } else {
+              console.warn("Cannot add item, out of stock.");
+              return state;
+            }
           }
         }),
 
-      removeItem: (productId, selectedColor, selectedStatue) =>
-        set((state) => ({
+      removeItem: (productId, selectedColor) =>
+        set(state => ({
           items: state.items.reduce<CartItem[]>((acc, item) => {
             if (
               item.product._id === productId &&
-              item.selectedColor === selectedColor &&
-              item.selectedStatue === selectedStatue
+              item.selectedColor === selectedColor
             ) {
               if (item.quantity > 1) acc.push({ ...item, quantity: item.quantity - 1 });
             } else {
@@ -70,13 +90,11 @@ const useStore = create<StoreState>()(
           }, []),
         })),
 
-      deleteCartProduct: (productId, selectedColor, selectedStatue) =>
-        set((state) => ({
+      deleteCartProduct: (productId, selectedColor) =>
+        set(state => ({
           items: state.items.filter(
-            (item) =>
-              !(item.product._id === productId &&
-                item.selectedColor === selectedColor &&
-                item.selectedStatue === selectedStatue)
+            item =>
+              !(item.product._id === productId && item.selectedColor === selectedColor)
           ),
         })),
 
@@ -95,25 +113,24 @@ const useStore = create<StoreState>()(
           return total + (price - discount) * item.quantity;
         }, 0),
 
-      getItemCount: (productId, selectedColor, selectedStatue) => {
+      getItemCount: (productId, selectedColor) => {
         const item = get().items.find(
-          (i) =>
+          i =>
             i.product?._id === productId &&
-            i.selectedColor === selectedColor &&
-            i.selectedStatue === selectedStatue
+            i.selectedColor === selectedColor
         );
-        return item ? item.quantity : 0;
+        return item?.quantity ?? 0;
       },
 
       getGroupedItems: () => get().items,
 
-      addToFavorite: async (product) => {
+      addToFavorite: async product => {
         return new Promise<void>((resolve) => {
-          set((state) => {
-            const isFavorite = state.favoriteProduct.some((item) => item._id === product._id);
+          set(state => {
+            const isFavorite = state.favoriteProduct.some(item => item._id === product._id);
             return {
               favoriteProduct: isFavorite
-                ? state.favoriteProduct.filter((item) => item._id !== product._id)
+                ? state.favoriteProduct.filter(item => item._id !== product._id)
                 : [...state.favoriteProduct, { ...product }],
             };
           });
@@ -121,9 +138,9 @@ const useStore = create<StoreState>()(
         });
       },
 
-      removeFromFavorite: (productId) =>
-        set((state) => ({
-          favoriteProduct: state.favoriteProduct.filter((item) => item._id !== productId),
+      removeFromFavorite: productId =>
+        set(state => ({
+          favoriteProduct: state.favoriteProduct.filter(item => item._id !== productId),
         })),
 
       resetFavorite: () => set({ favoriteProduct: [] }),

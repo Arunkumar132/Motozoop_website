@@ -13,23 +13,28 @@ import QuantityButtons from "./QuantityButton";
 interface Props {
   product: Product;
   selectedColor?: string;
-  selectedStatue?: string;
   className?: string;
 }
 
-const AddToCartButton = ({ product, selectedColor, selectedStatue, className }: Props) => {
+const AddToCartButton = ({ product, selectedColor, className }: Props) => {
   const { addItem, getItemCount } = useStore();
-  const itemCount = getItemCount(product?._id, selectedColor, selectedStatue);
 
-  // Get stock for the selected color from colors array
-  const colorStock = product?.colors?.find(c => c.colorName === selectedColor)?.stock ?? product?.stock ?? 0;
+  // Get count of this item in cart
+  const itemCount = getItemCount(product?._id, selectedColor);
+
+  // Compute stock for selected color
+  const colorStock =
+    product?.colors?.find(c => c.colorName === selectedColor)?.stock ??
+    product?.stock ??
+    0;
+
   const isOutOfStock = colorStock === 0;
 
   const handleAddToCart = () => {
     if (!product) return;
 
     if (itemCount < colorStock) {
-      addItem(product, selectedColor, selectedStatue);
+      addItem(product, selectedColor);
       toast.success(
         `${product.name}${selectedColor ? ` (${selectedColor})` : ""} added to cart`
       );
@@ -44,7 +49,10 @@ const AddToCartButton = ({ product, selectedColor, selectedStatue, className }: 
         <div className="text-sm w-full">
           <div className="flex items-center justify-between">
             <span className="text-xs text-darkColor/80">Quantity</span>
-            <QuantityButtons product={product} selectedColor={selectedColor} selectedStatue={selectedStatue}/>
+            <QuantityButtons 
+              product={product} 
+              selectedColor={selectedColor} 
+            />
           </div>
           <div className="flex items-center justify-between border-t pt-1">
             <span className="text-xs font-semibold">Subtotal</span>
