@@ -2,10 +2,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useClient } from "sanity";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, Legend
+  PieChart, Pie, Cell, Legend
 } from "recharts";
 
-// Orders Table with pagination and search
+// ------------------- Orders Table -------------------
 function OrdersTable({ orders, statusColors }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -28,13 +28,13 @@ function OrdersTable({ orders, statusColors }) {
 
   return (
     <div style={{ marginTop: "1rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap:"wrap", gap:"0.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
         <input
           type="text"
           placeholder="Search Orders..."
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid #555", flex: "1 1 auto", backgroundColor:"#2b2b2b", color:"#fff" }}
+          style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid #555", flex: "1 1 auto", backgroundColor: "#2b2b2b", color: "#fff" }}
         />
         <div>
           <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1} style={{ marginRight: "0.3rem" }}>Prev</button>
@@ -44,7 +44,7 @@ function OrdersTable({ orders, statusColors }) {
       </div>
 
       <div style={{ overflowX: "auto", maxHeight: "500px", overflowY: "auto", borderRadius: "10px" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", color:"#fff" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
           <thead>
             <tr>
               {["Order ID", "Customer", "Total Price", "Order Date", "Status"].map((h, i) => (
@@ -54,9 +54,10 @@ function OrdersTable({ orders, statusColors }) {
           </thead>
           <tbody>
             {currentOrders.map(order => (
-              <tr key={order._id} style={{ transition: "background 0.2s", cursor: "default" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              <tr key={order._id}
+                style={{ transition: "background 0.2s", cursor: "default" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 <td style={{ padding: "0.6rem" }}>{order.orderNumber}</td>
                 <td style={{ padding: "0.6rem" }}>{order.customerName}</td>
@@ -87,24 +88,37 @@ function OrdersTable({ orders, statusColors }) {
   );
 }
 
+// ------------------- Analytics Widget -------------------
 export default {
   name: "analytics-widget",
   component: function AnalyticsWidget() {
     const client = useClient({ apiVersion: "2025-01-01" });
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
-    const [filter, setFilter] = useState("all"); // all | today | week | month | year
+    const [filter, setFilter] = useState("all");
 
+    // Fetch Data (with draft filtering)
     useEffect(() => {
-      client.fetch(`*[_type=="order"]{
-        _id, orderNumber, customerName, totalPrice, orderDate, status, products[]{product->{_id,name,stock,price}, quantity}
-      }`).then(setOrders);
+      Promise.all([
+        client.fetch(`*[_type=="order" && !(_id in path("drafts.**"))]{
+          _id, orderNumber, customerName, totalPrice, orderDate, status, products[]{product->{_id,name,stock,price}, quantity}
+        }`),
+        client.fetch(`*[_type=="product" && !(_id in path("drafts.**"))]{
+          _id, name, stock, price
+        }`)
+      ])
+        .then(([orderData, productData]) => {
+          // Deduplicate products
+          const uniqueProductsMap = new Map();
+          productData.forEach(p => {
+            if (!uniqueProductsMap.has(p._id)) uniqueProductsMap.set(p._id, p);
+          });
+          setOrders(orderData);
+          setProducts(Array.from(uniqueProductsMap.values()));
+        });
+    }, [client]);
 
-      client.fetch(`*[_type=="product"]{
-        _id, name, stock, price
-      }`).then(setProducts);
-    }, []);
-
+    // ---------- Filtering by Time ----------
     const now = new Date();
     const isSameDay = date => new Date(date).toDateString() === now.toDateString();
     const isSameWeek = date => {
@@ -118,7 +132,7 @@ export default {
     const isSameYear = date => new Date(date).getFullYear() === now.getFullYear();
 
     const filteredOrders = useMemo(() => {
-      switch(filter) {
+      switch (filter) {
         case "today": return orders.filter(o => o?._id && isSameDay(o.orderDate));
         case "week": return orders.filter(o => o?._id && isSameWeek(o.orderDate));
         case "month": return orders.filter(o => o?._id && isSameMonth(o.orderDate));
@@ -127,12 +141,12 @@ export default {
       }
     }, [orders, filter]);
 
-    // KPI calculations
+    // ---------- KPI Calculations ----------
     const totalOrders = filteredOrders.length;
     const totalSales = filteredOrders.reduce((sum, o) => sum + (o?.totalPrice || 0), 0);
     const lowStockProducts = products.filter(p => p?.stock !== undefined && p.stock <= 5);
 
-    // Top Products
+    // ---------- Top Products ----------
     const productSalesMap = {};
     filteredOrders.forEach(o => {
       o.products?.forEach(p => {
@@ -144,7 +158,7 @@ export default {
     });
     const topProducts = Object.values(productSalesMap).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
 
-    // Order Status Distribution
+    // ---------- Status Distribution ----------
     const statusColors = {
       pending: "#f6c90e",
       processing: "#4dabf7",
@@ -164,11 +178,13 @@ export default {
       }, {})
     ).map(([status, value]) => ({ status, value }));
 
+    // ---------- UI ----------
     return (
-      <div style={{ padding: "1rem", fontFamily: "sans-serif", backgroundColor: "#1e1e1e", color:"#fff" }}>
+      <div style={{ padding: "1rem", fontFamily: "sans-serif", backgroundColor: "#1e1e1e", color: "#fff" }}>
         {/* Filters */}
-        <div style={{ marginBottom: "1rem", display:"flex", gap:"0.5rem", flexWrap:"wrap" }}>
-          <select value={filter} onChange={e=>setFilter(e.target.value)} style={{ padding:"0.5rem", borderRadius:"6px", backgroundColor:"#2b2b2b", color:"#fff", border:"1px solid #555" }}>
+        <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <select value={filter} onChange={e => setFilter(e.target.value)}
+            style={{ padding: "0.5rem", borderRadius: "6px", backgroundColor: "#2b2b2b", color: "#fff", border: "1px solid #555" }}>
             <option value="all">All Time</option>
             <option value="today">Today</option>
             <option value="week">This Week</option>
@@ -177,7 +193,7 @@ export default {
           </select>
         </div>
 
-        {/* KPI Widgets */}
+        {/* KPI Cards */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
           {[
             { title: "Total Orders", value: totalOrders },
@@ -199,29 +215,29 @@ export default {
         </div>
 
         {/* Charts */}
-        <div style={{ display:"flex", flexWrap:"wrap", gap:"1rem", marginTop:"1rem" }}>
-          <div style={{ flex:"1 1 400px", padding:"1rem", borderRadius:"10px", backgroundColor:"#2b2b2b", boxShadow:"0 3px 10px rgba(0,0,0,0.3)" }}>
-            <h4 style={{color:"#fff"}}>Top Products Sold</h4>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
+          <div style={{ flex: "1 1 400px", padding: "1rem", borderRadius: "10px", backgroundColor: "#2b2b2b", boxShadow: "0 3px 10px rgba(0,0,0,0.3)" }}>
+            <h4 style={{ color: "#fff" }}>Top Products Sold</h4>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={topProducts}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444"/>
-                <XAxis dataKey="name" stroke="#fff"/>
-                <YAxis stroke="#fff"/>
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis dataKey="name" stroke="#fff" />
+                <YAxis stroke="#fff" />
                 <Tooltip />
                 <Bar dataKey="quantity" fill="#4dabf7" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div style={{ flex:"1 1 300px", padding:"1rem", borderRadius:"10px", backgroundColor:"#2b2b2b", boxShadow:"0 3px 10px rgba(0,0,0,0.3)" }}>
-            <h4 style={{color:"#fff"}}>Order Status Distribution</h4>
+          <div style={{ flex: "1 1 300px", padding: "1rem", borderRadius: "10px", backgroundColor: "#2b2b2b", boxShadow: "0 3px 10px rgba(0,0,0,0.3)" }}>
+            <h4 style={{ color: "#fff" }}>Order Status Distribution</h4>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={statusDistribution}
                   dataKey="value"
                   nameKey="status"
-                  label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                 >
                   {statusDistribution.map((entry, index) => (
@@ -235,31 +251,31 @@ export default {
           </div>
         </div>
 
-        {/* Recent Orders Table */}
-        <OrdersTable orders={filteredOrders.sort((a,b)=>new Date(b.orderDate)-new Date(a.orderDate))} statusColors={statusColors} />
+        {/* Orders Table */}
+        <OrdersTable orders={filteredOrders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))} statusColors={statusColors} />
 
         {/* Low Stock Table */}
-        <div style={{ marginTop:"2rem", padding:"1rem", borderRadius:"10px", backgroundColor:"#2b2b2b", boxShadow:"0 3px 10px rgba(0,0,0,0.3)" }}>
-          <h4 style={{color:"#fff"}}>Low Stock Products (≤5)</h4>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", color:"#fff" }}>
+        <div style={{ marginTop: "2rem", padding: "1rem", borderRadius: "10px", backgroundColor: "#2b2b2b", boxShadow: "0 3px 10px rgba(0,0,0,0.3)" }}>
+          <h4 style={{ color: "#fff" }}>Low Stock Products (≤5)</h4>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
               <thead>
                 <tr>
-                  {["Product", "Stock", "Price"].map((h,i)=>(
-                    <th key={i} style={{textAlign:"left", padding:"0.6rem", borderBottom:"1px solid #555"}}>{h}</th>
+                  {["Product", "Stock", "Price"].map((h, i) => (
+                    <th key={i} style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #555" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {lowStockProducts.map(p=>(
+                {lowStockProducts.map(p => (
                   <tr key={p._id}>
-                    <td style={{padding:"0.6rem"}}>{p.name}</td>
-                    <td style={{padding:"0.6rem"}}>{p.stock}</td>
-                    <td style={{padding:"0.6rem"}}>₹{p.price?.toLocaleString() || 0}</td>
+                    <td style={{ padding: "0.6rem" }}>{p.name}</td>
+                    <td style={{ padding: "0.6rem" }}>{p.stock}</td>
+                    <td style={{ padding: "0.6rem" }}>₹{p.price?.toLocaleString() || 0}</td>
                   </tr>
                 ))}
-                {lowStockProducts.length===0 && (
-                  <tr><td colSpan={3} style={{padding:"1rem", textAlign:"center"}}>No low stock products</td></tr>
+                {lowStockProducts.length === 0 && (
+                  <tr><td colSpan={3} style={{ padding: "1rem", textAlign: "center" }}>No low stock products</td></tr>
                 )}
               </tbody>
             </table>
