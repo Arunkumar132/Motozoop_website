@@ -106,7 +106,6 @@ export const productType = defineType({
               title: "Color Name",
               type: "string",
               description: "Enter color name or hex code",
-              validation: Rule => Rule.required(),
             }),
             defineField({
               name: "images",

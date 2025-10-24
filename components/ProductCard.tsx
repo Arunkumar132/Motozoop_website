@@ -116,8 +116,12 @@ const ProductCard = ({ product }: { product: Product }) => {
 
         {/* Price */}
         <PriceView
-          price={product?.price}
-          discount={product?.discount}
+          price={product?.price ?? 0} 
+          discount={
+            product?.price && product?.discount
+              ? (Number(product.price) * Number(product.discount)) / 100
+              : 0
+          }
           className="text-sm"
         />
 
