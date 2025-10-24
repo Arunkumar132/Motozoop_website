@@ -116,14 +116,10 @@ const ProductCard = ({ product }: { product: Product }) => {
 
         {/* Price */}
         <PriceView
-          price={product?.price ?? 0} 
-          discount={
-            product?.price && product?.discount
-              ? (Number(product.price) * Number(product.discount)) / 100
-              : 0
-          }
-          className="text-sm"
-        />
+  price={product?.price ?? 0}
+  discount={product?.discount ?? 0} 
+  className="text-sm"
+/>
 
         {/* Add to Cart */}
         <div onClick={(e) => e.stopPropagation()}>
