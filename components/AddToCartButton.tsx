@@ -12,21 +12,29 @@ import QuantityButtons from "./QuantityButton";
 
 interface Props {
   product: Product;
+  selectedColor?: string;
+  selectedStatue?: string;
   className?: string;
 }
 
-const AddToCartButton = ({ product, className }: Props) => {
-  const { addItem, getItemCount} = useStore();
-  const itemCount = getItemCount(product?._id); 
-  const isOutOfStock = product?.stock === 0;
+const AddToCartButton = ({ product, selectedColor, selectedStatue, className }: Props) => {
+  const { addItem, getItemCount } = useStore();
+  const itemCount = getItemCount(product?._id, selectedColor, selectedStatue);
 
-  const handleAddToCart = () =>{
-    if((product?.stock as number) > itemCount){
-      addItem(product);
-      toast.success(`${product?.name?.substring(0,20)} added successfully to cart`,
+  // Use color-specific stock if available
+  const colorStock = product?.colorStock?.[selectedColor ?? ""] ?? product?.stock ?? 0;
+  const isOutOfStock = colorStock === 0;
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    if (itemCount < colorStock) {
+      addItem(product, selectedColor, selectedStatue);
+      toast.success(
+        `${product.name}${selectedColor ? ` (${selectedColor})` : ""} added to cart`
       );
     } else {
-      toast.error("Can not add more items, stock limit reached.");
+      toast.error("Cannot add more items, stock limit reached.");
     }
   };
 
@@ -36,26 +44,25 @@ const AddToCartButton = ({ product, className }: Props) => {
         <div className="text-sm w-full">
           <div className="flex items-center justify-between">
             <span className="text-xs text-darkColor/80">Quantity</span>
-            <QuantityButtons product={product} />
+            <QuantityButtons product={product} selectedColor={selectedColor} selectedStatue={selectedStatue}/>
           </div>
           <div className="flex items-center justify-between border-t pt-1">
             <span className="text-xs font-semibold">Subtotal</span>
             <PriceFormatter 
-              amount={product?.price ? product?.price * itemCount : 0}
+              amount={product?.price ? product.price * itemCount : 0}
               className="text-sm font-semibold"
             />
           </div>
         </div>
-
       ) : (
         <Button
           onClick={handleAddToCart}
           disabled={isOutOfStock}
           className={cn(
             "w-full text-medium bg-shop_dark_green/80 text-shop_light_bg font-semibold tracking-wide border border-shop_dark_green/80 shadow-none hover:text-white hover:bg-shop_dark_green hover:border-shop_dark_green hoverEffect",
-          className
+            className
           )}
-          variant="default" // 👈 ensures no default variant bg is applied
+          variant="default"
         >
           <ShoppingBag className="h-5 w-5" />
           {isOutOfStock ? "Out of Stock" : "Add to Cart"}

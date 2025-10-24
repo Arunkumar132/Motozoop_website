@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect, use } from "react";
 import Container from "@/components/Container";
 import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -9,48 +11,62 @@ import StatueSelector from "@/components/StatueSelector";
 import DeliveryCheckWrapper from "@/components/DeliveryCheckWrapper";
 import ReturnModal from "@/components/ReturnModal";
 import BuyNow from "@/components/BuyNow";
+import DynamicStockDisplay from "@/components/DynamicStockDisplay";
 import { getProductBySlug } from "@/sanity/queries";
-import { CornerDownLeft, StarIcon } from "lucide-react";
+import { CornerDownLeft } from "lucide-react";
 
 interface Props {
-  params: { slug: string };
+  params: { slug: string } | Promise<{ slug: string }>;
 }
 
-const SingleProductPage = async ({ params }: Props) => {
-  const product = await getProductBySlug(params.slug);
+export default function SingleProductPage({ params }: Props) {
+  const [product, setProduct] = useState<any>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  // Unwrap params (Next.js 14+)
+  const { slug } = use(params);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      const data = await getProductBySlug(slug);
+      setProduct(data);
+    }
+    fetchProduct();
+  }, [slug]);
 
   if (!product) {
     return (
       <Container className="py-10 text-center">
-        <h2 className="text-2xl font-semibold text-red-600">Product not found</h2>
+        <h2 className="text-2xl font-semibold text-red-600">
+          Product not found
+        </h2>
       </Container>
     );
   }
 
-  const isStock = product.stock > 0;
   const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
   const hasStatues = Array.isArray(product.statues) && product.statues.length > 0;
 
-  // ✅ Fix: Collect all images from all colors (flatten)
-  const allImages =
-    hasColors && product.colors.length > 0
-      ? product.colors.flatMap((color: any) => color.images || [])
+  // Total stock if no color selected
+  const totalStock = hasColors
+    ? product.colors.reduce((sum: number, c: any) => sum + (c.stock || 0), 0)
+    : product.stock || 0;
+
+  // Images filtered by selected color
+  const imagesToShow =
+    selectedColor && hasColors
+      ? product.colors.find((c: any) => c.colorName === selectedColor)?.images || []
+      : hasColors
+      ? product.colors.flatMap((c: any) => c.images || [])
       : [];
 
   return (
     <Container className="flex flex-col md:flex-row gap-10 pb-10">
-      {/* ---------- Product Image Section ---------- */}
-      {allImages.length > 0 ? (
-        <ImageView images={allImages} isStock={isStock} />
-      ) : (
-        <div className="flex items-center justify-center w-full md:w-1/2 bg-gray-100 rounded-lg">
-          <p className="text-gray-500 py-20">No images available</p>
-        </div>
-      )}
+      {/* Product Image */}
+      <ImageView key={selectedColor || "all"} images={imagesToShow} isStock={totalStock} />
 
-      {/* ---------- Product Info Section ---------- */}
+      {/* Product Info */}
       <div className="w-full md:w-1/2 flex flex-col gap-5">
-        {/* Product Title & Description */}
         <div className="space-y-2">
           <h2 className="text-3xl font-bold text-gray-900">{product.name}</h2>
           {product.description && (
@@ -60,7 +76,7 @@ const SingleProductPage = async ({ params }: Props) => {
           )}
         </div>
 
-        {/* ---------- Price & Stock Status ---------- */}
+        {/* Price & Stock */}
         <div className="border-t border-b border-gray-200 py-4 space-y-2">
           <PriceView
             price={product.price}
@@ -68,25 +84,46 @@ const SingleProductPage = async ({ params }: Props) => {
             className="text-2xl font-bold"
           />
 
-          <p
-            className={`inline-block px-4 py-1.5 text-sm font-semibold rounded-lg ${
-              isStock
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-600"
-            }`}
-          >
-            {isStock ? "In Stock" : "Out of Stock"}
-          </p>
+          <DynamicStockDisplay
+            colors={product.colors || []}
+            totalStock={totalStock}
+            selectedColor={selectedColor}
+          />
         </div>
 
-        {/* ---------- Color & Statue Selection ---------- */}
-        {hasColors && <ColorSelection colors={product.colors} />}
-        {hasStatues && <StatueSelector statues={product.statues} />}
+        {/* Color & Statue Selection */}
+        {(hasColors || hasStatues) && (
+          <div className="flex flex-col gap-4">
+            {hasColors && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Choose Color</h3>
+                <ColorSelection
+                  colors={product.colors.map((c: any) => ({
+                    colorName: c.colorName,
+                    stock: c.stock,
+                  }))}
+                  selectedColor={selectedColor}
+                  onSelectColor={setSelectedColor}
+                />
+              </div>
+            )}
+            {hasStatues && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Choose Statue</h3>
+                <StatueSelector statues={product.statues} />
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* ---------- Buttons Section ---------- */}
+        {/* Buttons */}
         <div className="flex items-center justify-start gap-4 w-full">
           <div className="flex-1 h-12">
-            <AddToCartButton product={product} className="w-full h-full text-base" />
+            <AddToCartButton
+              product={product}
+              selectedColor={selectedColor} // if applicable
+              className="w-full h-full text-base"
+            />
           </div>
           <div className="flex-1 h-12">
             <BuyNow product={product} className="w-full h-full text-base" />
@@ -96,7 +133,7 @@ const SingleProductPage = async ({ params }: Props) => {
           </div>
         </div>
 
-        {/* ---------- Delivery & Return Info ---------- */}
+        {/* Delivery & Return */}
         <div className="flex flex-col w-full gap-3.5 mt-2">
           <DeliveryCheckWrapper />
           <div className="border border-darkColor/50 p-3 flex items-center gap-2.5">
@@ -112,6 +149,4 @@ const SingleProductPage = async ({ params }: Props) => {
       </div>
     </Container>
   );
-};
-
-export default SingleProductPage;
+}
