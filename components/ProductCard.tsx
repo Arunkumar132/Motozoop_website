@@ -8,7 +8,6 @@ import Image from "next/image";
 import React from "react";
 import { Title } from "./Title";
 import PriceView from "./PriceView";
-import AddToCartButton from "./AddToCartButton";
 import { cn } from "@/lib/utils";
 import ProductSideMenu from "./ProductSideMenu";
 
@@ -117,14 +116,6 @@ console.log("Total stock:", totalStock);
           className="text-sm"
         />
 
-        {/* Add to Cart */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <AddToCartButton
-            product={product}
-            className="w-36 rounded-full"
-            disabled={!isInStock} // disable if stock is zero
-          />
-        </div>
       </div>
     </div>
   );

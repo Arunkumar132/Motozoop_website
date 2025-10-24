@@ -30,6 +30,12 @@ export default function SingleProductPage({ params }: Props) {
     async function fetchProduct() {
       const data = await getProductBySlug(slug);
       setProduct(data);
+
+      // Set first available color as default
+      if (Array.isArray(data.colors) && data.colors.length > 0) {
+        const firstAvailableColor = data.colors.find((c: any) => c.stock > 0);
+        setSelectedColor(firstAvailableColor ? firstAvailableColor.colorName : null);
+      }
     }
     fetchProduct();
   }, [slug]);
@@ -126,7 +132,11 @@ export default function SingleProductPage({ params }: Props) {
             />
           </div>
           <div className="flex-1 h-12">
-            <BuyNow product={product} className="w-full h-full text-base" />
+            <BuyNow
+              product={product}
+              selectedColor={selectedColor} // pass selected color
+              className="w-full h-full text-base"
+            />
           </div>
           <div className="h-12 w-12 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition">
             <FavoriteButton showProduct product={product} iconSize={24} />

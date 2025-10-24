@@ -357,19 +357,27 @@ const CartPage = () => {
                 const product = item.product;
                 if (!product) return null;
 
+                // Get image based on selected color
+                const colorToShow = item.selectedColor
+                  ? product.colors?.find((c: any) => c.colorName === item.selectedColor)
+                  : product.colors?.[0];
+
+                const imageToShow = colorToShow?.images?.[0];
+                const imageUrl = imageToShow?.asset ? urlFor(imageToShow).url() : "/placeholder.png";
+
                 return (
                   <div
                     key={`${product._id ?? "unknown"}-${item.selectedColor ?? "none"}-${item.selectedStatue ?? "none"}`}
                     className="border-b p-2.5 last:border-b-0 flex items-center justify-between gap-5"
                   >
                     <div className="flex flex-1 items-start gap-2 h-36 md:h-44">
-                      {product?.images?.[0] && (
+                      {imageUrl && (
                         <Link
                           href={`/product/${product?.slug?.current ?? ""}`}
                           className="border p-0.5 md:p-1 mr-2 rounded-md overflow-hidden group"
                         >
                           <Image
-                            src={urlFor(product.images[0]).url()}
+                            src={imageUrl}
                             alt={product?.name ?? "Product Image"}
                             width={500}
                             height={500}
