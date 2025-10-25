@@ -44,11 +44,19 @@ const QuantityButtons = ({
 
   return (
     <div className="flex items-center gap-2">
-      <Button onClick={handleDecrease} disabled={itemCount <= 0} className="w-8 h-8 text-lg font-bold">
+      <Button
+        onClick={handleDecrease}
+        disabled={itemCount <= 0}
+        className="w-8 h-8 text-lg font-bold bg-white text-darkColor border border-gray-300 hover:bg-gray-100"
+      >
         -
       </Button>
       <span className="w-6 text-center">{itemCount}</span>
-      <Button onClick={handleIncrease} disabled={itemCount >= maxCount} className="w-8 h-8 text-lg font-bold">
+      <Button
+        onClick={handleIncrease}
+        disabled={itemCount >= maxCount}
+        className="w-8 h-8 text-lg font-bold bg-white text-darkColor border border-gray-300 hover:bg-gray-100"
+      >
         +
       </Button>
     </div>

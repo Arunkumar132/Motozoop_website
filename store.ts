@@ -6,17 +6,18 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor?: string;
+  selectedStatue?: string;
 }
 
 interface StoreState {
   items: CartItem[];
-  addItem: (product: Product, selectedColor?: string) => void;
-  removeItem: (productId: string, selectedColor?: string) => void;
-  deleteCartProduct: (productId: string, selectedColor?: string) => void;
+  addItem: (product: Product, selectedColor?: string, selectedStatue?: string) => void;
+  removeItem: (productId: string, selectedColor?: string, selectedStatue?: string) => void;
+  deleteCartProduct: (payload: { productId: string; selectedColor?: string; selectedStatue?: string }) => void;
   resetCart: () => void;
   getTotalPrice: () => number;
   getSubTotalPrice: () => number;
-  getItemCount: (productId: string, selectedColor?: string) => number;
+  getItemCount: (productId: string, selectedColor?: string, selectedStatue?: string) => number;
   getGroupedItems: () => CartItem[];
   favoriteProduct: Product[];
   addToFavorite: (product: Product) => Promise<void>;
@@ -30,7 +31,7 @@ const useStore = create<StoreState>()(
       items: [],
       favoriteProduct: [],
 
-      addItem: (product, selectedColor) =>
+      addItem: (product, selectedColor, selectedStatue) =>
         set((state) => {
           if (!product?._id) {
             console.warn("addItem called with invalid product");
@@ -47,7 +48,8 @@ const useStore = create<StoreState>()(
           const existingItem = state.items.find(
             item =>
               item.product._id === product._id &&
-              item.selectedColor === selectedColor
+              item.selectedColor === selectedColor &&
+              item.selectedStatue === selectedStatue
           );
 
           if (existingItem) {
@@ -66,7 +68,7 @@ const useStore = create<StoreState>()(
           } else {
             if (colorStock > 0) {
               return {
-                items: [...state.items, { product, quantity: 1, selectedColor }],
+                items: [...state.items, { product, quantity: 1, selectedColor, selectedStatue }],
               };
             } else {
               console.warn("Cannot add item, out of stock.");
@@ -75,12 +77,13 @@ const useStore = create<StoreState>()(
           }
         }),
 
-      removeItem: (productId, selectedColor) =>
+      removeItem: (productId, selectedColor, selectedStatue) =>
         set(state => ({
           items: state.items.reduce<CartItem[]>((acc, item) => {
             if (
               item.product._id === productId &&
-              item.selectedColor === selectedColor
+              item.selectedColor === selectedColor &&
+              item.selectedStatue === selectedStatue
             ) {
               if (item.quantity > 1) acc.push({ ...item, quantity: item.quantity - 1 });
             } else {
@@ -90,11 +93,15 @@ const useStore = create<StoreState>()(
           }, []),
         })),
 
-      deleteCartProduct: (productId, selectedColor) =>
-        set(state => ({
+      deleteCartProduct: ({ productId, selectedColor, selectedStatue }) =>
+        set((state) => ({
           items: state.items.filter(
-            item =>
-              !(item.product._id === productId && item.selectedColor === selectedColor)
+            (item) =>
+              !(
+                item.product._id === productId &&
+                item.selectedColor === selectedColor &&
+                item.selectedStatue === selectedStatue
+              )
           ),
         })),
 
@@ -113,11 +120,12 @@ const useStore = create<StoreState>()(
           return total + (price - discount) * item.quantity;
         }, 0),
 
-      getItemCount: (productId, selectedColor) => {
+      getItemCount: (productId, selectedColor, selectedStatue) => {
         const item = get().items.find(
           i =>
             i.product?._id === productId &&
-            i.selectedColor === selectedColor
+            i.selectedColor === selectedColor &&
+            i.selectedStatue === selectedStatue
         );
         return item?.quantity ?? 0;
       },

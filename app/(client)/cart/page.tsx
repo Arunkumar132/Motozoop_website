@@ -21,7 +21,6 @@ import {
 import ProductSideMenu from "@/components/ProductSideMenu";
 import toast from "react-hot-toast";
 import PriceFormatter from "@/components/PriceFormatter";
-import QuantityButtons from "@/components/QuantityButton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -44,7 +43,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateOrderId } from "@/components/orderid";
 
-
 const CartPage = () => {
   const {
     deleteCartProduct,
@@ -52,6 +50,7 @@ const CartPage = () => {
     getSubTotalPrice,
     resetCart,
     getGroupedItems,
+    updateCartQuantity
   } = useStore();
 
   const groupedItems = getGroupedItems();
@@ -76,11 +75,11 @@ const CartPage = () => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const hasItems = Array.isArray(groupedItems) && groupedItems.length > 0;
 
-  // Fetch addresses for the logged-in user
+  // Fetch addresses
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/address"); // no userId needed
+      const res = await fetch("/api/address");
       if (!res.ok) throw new Error("Failed to fetch addresses");
 
       const data: Address[] = await res.json();
@@ -91,7 +90,6 @@ const CartPage = () => {
 
       setAddresses(data);
 
-      // Select default address if exists, else first one
       const defaultAddress = data.find((addr) => addr.default);
       if (defaultAddress) setSelectedAddress(defaultAddress);
       else if (data.length > 0) setSelectedAddress(data[0]);
@@ -103,13 +101,11 @@ const CartPage = () => {
     }
   };
 
-
   useEffect(() => {
     fetchAddresses();
   }, [currentUserId]);
 
-
-  // Initialize quantities from store
+  // Initialize quantities
   useEffect(() => {
     const q: { [key: string]: number } = {};
     groupedItems.forEach((item) => {
@@ -127,7 +123,6 @@ const CartPage = () => {
     });
   };
 
-  // Reset cart
   const handleResetCart = () => {
     if (window.confirm("Are you sure you want to reset the cart?")) {
       resetCart();
@@ -139,26 +134,22 @@ const CartPage = () => {
   const total = groupedItems.reduce((acc, item) => {
     const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
     const qty = quantities[key] || item.quantity || 1;
-    return acc + (item.product?.price ?? 0) * qty; // original price
+    return acc + (item.product?.price ?? 0) * qty;
   }, 0);
 
   const amountDiscount = groupedItems.reduce((acc, item) => {
     const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
     const qty = quantities[key] || item.quantity || 1;
     const price = item.product?.price ?? 0;
-    const discountPercent = item.product?.discount ?? 0; // discount percentage
+    const discountPercent = item.product?.discount ?? 0;
     const discountAmount = (price * discountPercent) / 100;
     return acc + discountAmount * qty;
   }, 0);
 
-
   const DELIVERY_CHARGE = 75;
-  const totalPrice =  total - amountDiscount + DELIVERY_CHARGE;
+  const totalPrice = total - amountDiscount + DELIVERY_CHARGE;
 
-
-
-
-  // Load Razorpay script
+  // Razorpay script
   const loadRazorpayScript = (): Promise<void> =>
     new Promise((resolve, reject) => {
       if (typeof window === "undefined") return reject(new Error("window is undefined"));
@@ -171,7 +162,6 @@ const CartPage = () => {
       document.body.appendChild(script);
     });
 
-  // Checkout
   const handleCheckout = async () => {
     if (!user) {
       toast.error("Please login to continue");
@@ -185,7 +175,6 @@ const CartPage = () => {
 
     setLoading(true);
     let paymentHandled = false;
-
 
     const metadata: any = {
       orderNumber: generateOrderId(),
@@ -329,7 +318,6 @@ const CartPage = () => {
     }
   };
 
-  // Address handlers
   const addAddressToSanity = async (addressData: any) => {
     try {
       setLoading(true);
@@ -402,17 +390,15 @@ const CartPage = () => {
                 const product = item.product;
                 if (!product) return null;
 
-                // Get image based on selected color
                 const colorToShow = item.selectedColor
                   ? product.colors?.find((c: any) => c.colorName === item.selectedColor)
                   : product.colors?.[0];
 
                 const imageToShow = colorToShow?.images?.[0];
                 const imageUrl = imageToShow?.asset ? urlFor(imageToShow).url() : "/placeholder.png";
-                
+
                 const key = `${product._id}-${item.selectedColor}-${item.selectedStatue}`;
                 const quantity = quantities[key] || 1;
-
 
                 return (
                   <div
@@ -468,11 +454,8 @@ const CartPage = () => {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span
-                                  onClick={() => {
-                                    if (!product._id) return;
-                                    deleteCartProduct(product._id, {
-                                      selectedColor: item.selectedColor,
-                                    });
+                                  onClick={() =>{
+                                    deleteCartProduct({ productId: product._id!, selectedColor: item.selectedColor!, selectedStatue: item.selectedStatue! });
                                     toast.success("Product removed from cart");
                                   }}
                                   className="cursor-pointer"
@@ -487,34 +470,32 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                     <div className="flex flex-col items-end justify-between h-36 md:h-44 p-0.5 md:p-1">
+                    {/* Quantity Buttons - WHITE & BORDERLESS */}
+                    <div className="flex flex-col items-end justify-between h-36 md:h-44 p-0.5 md:p-1">
                       <PriceFormatter amount={(product?.price ?? 0) * quantity} className="font-bold text-lg"/>
                       <div className="flex items-center gap-2">
-                        <Button size="sm"
-                          className="h-8 w-8 p-0 border-gray-300"
+                        <Button
+                          size="sm"
+                          className="h-8 w-8 p-0 bg-white text-shop_dark_green hover:bg-shop_dark_green/10 hover:text-shop_dark_green shadow-none border-none"
                           onClick={() => handleQuantityChange(key, quantity - 1, item)}
-                          disabled={quantity <= 1} // disables if quantity is 1
+                          disabled={quantity <= 1}
                         >
                           -
                         </Button>
 
-                        <span>{quantity}</span>
-                        <Button size="sm"
-                          className="h-8 w-8 p-0 border-gray-300"
+                        <span className="font-semibold text-sm w-6 text-center text-darkColor">{quantity}</span>
+
+                        <Button
+                          size="sm"
+                          className="h-8 w-8 p-0 bg-white text-shop_dark_green hover:bg-shop_dark_green/10 hover:text-shop_dark_green shadow-none border-none"
                           onClick={() => handleQuantityChange(key, quantity + 1, item)}
-                          disabled={
-                            // disable if quantity reaches stock limit
-                            (() => {
-                              const colorVariant = product.colors?.find(
-                                (c: any) => c.colorName === item.selectedColor
-                              );
-                              const availableStock =
-                                colorVariant?.stock ??
-                                product.stock ??
-                                Infinity; // fallback if undefined
-                              return quantity >= availableStock;
-                            })()
-                          }
+                          disabled={(() => {
+                            const colorVariant = product.colors?.find(
+                              (c: any) => c.colorName === item.selectedColor
+                            );
+                            const availableStock = colorVariant?.stock ?? product.stock ?? Infinity;
+                            return quantity >= availableStock;
+                          })()}
                         >
                           +
                         </Button>
@@ -557,7 +538,7 @@ const CartPage = () => {
                 </div>
               </div>
 
-              {/* Order Summary - Mobile Sticky Bottom */}
+              {/* Mobile Sticky Bottom */}
               <div className="fixed bottom-0 left-0 w-full bg-white p-4 border-t shadow-lg md:hidden z-50">
                 <h2 className="text-lg font-semibold mb-3">Order Summary</h2>
                 <div className="space-y-3">
@@ -567,38 +548,24 @@ const CartPage = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Discount</span>
-                    <PriceFormatter
-                      amount={amountDiscount}
-                      className="font-semibold text-red-600"
-                    />
+                    <PriceFormatter amount={amountDiscount} className="font-semibold text-red-600"/>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">Delivery Charges</span>
-                    <PriceFormatter
-                      amount={DELIVERY_CHARGE}
-                      className="font-semibold"
-                    />
+                    <PriceFormatter amount={DELIVERY_CHARGE} className="font-semibold"/>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <PriceFormatter
-                      amount={totalPrice}
-                      className="text-black"
-                    />
+                    <PriceFormatter amount={totalPrice} className="text-black"/>
                   </div>
-                  <Button
-                    className="w-full rounded-full font-semibold tracking-wide hoverEffect"
-                    size="lg"
-                    disabled={loading}
-                    onClick={handleCheckout}
-                  >
+                  <Button className="w-full rounded-full font-semibold tracking-wide hoverEffect" size="lg" disabled={loading} onClick={handleCheckout}>
                     {loading ? "Processing..." : "Proceed to Checkout"}
                   </Button>
                 </div>
               </div>
 
-              {/* Delivery Addresses */}
+              {/* Addresses */}
               {addresses && (
                 <div className="bg-white rounded-md mt-5 p-4">
                   <Card>
@@ -624,7 +591,7 @@ const CartPage = () => {
                           </div>
                         ))}
                       </RadioGroup>
-                      {/* Add New Address Modal */}
+
                       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
                         <DialogTrigger asChild>
                           <Button variant="outline" className="w-full mt-4">Add New Address</Button>
@@ -650,6 +617,7 @@ const CartPage = () => {
                   </Card>
                 </div>
               )}
+
             </div>
           </div>
         </div>

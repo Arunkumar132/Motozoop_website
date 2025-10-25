@@ -101,14 +101,13 @@ export default {
     useEffect(() => {
       Promise.all([
         client.fetch(`*[_type=="order" && !(_id in path("drafts.**"))]{
-          _id, orderNumber, customerName, totalPrice, orderDate, status, products[]{product->{_id,name,stock,price}, quantity}
+          _id, orderNumber, customerName, totalPrice, orderDate, status, products[]{product->{_id,name,stock,price,colors}, quantity}
         }`),
         client.fetch(`*[_type=="product" && !(_id in path("drafts.**"))]{
-          _id, name, stock, price
+          _id, name, stock, price, colors
         }`)
       ])
         .then(([orderData, productData]) => {
-          // Deduplicate products
           const uniqueProductsMap = new Map();
           productData.forEach(p => {
             if (!uniqueProductsMap.has(p._id)) uniqueProductsMap.set(p._id, p);
@@ -144,7 +143,15 @@ export default {
     // ---------- KPI Calculations ----------
     const totalOrders = filteredOrders.length;
     const totalSales = filteredOrders.reduce((sum, o) => sum + (o?.totalPrice || 0), 0);
-    const lowStockProducts = products.filter(p => p?.stock !== undefined && p.stock <= 5);
+
+    // Low stock products
+    const lowStockProducts = products.filter(p => {
+      if (Array.isArray(p.colors) && p.colors.length > 0) {
+        const totalStock = p.colors.reduce((sum, c) => sum + (c.stock ?? 0), 0);
+        return totalStock <= 5;
+      }
+      return p.stock !== undefined && p.stock <= 5;
+    });
 
     // ---------- Top Products ----------
     const productSalesMap = {};
@@ -255,46 +262,68 @@ export default {
         <OrdersTable orders={filteredOrders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))} statusColors={statusColors} />
 
         {/* Low Stock Table */}
-        <div style={{ marginTop: "2rem", padding: "1rem", borderRadius: "10px", backgroundColor: "#2b2b2b", boxShadow: "0 3px 10px rgba(0,0,0,0.3)" }}>
+        <div
+          style={{
+            marginTop: "2rem",
+            padding: "1rem",
+            borderRadius: "10px",
+            backgroundColor: "#2b2b2b",
+            boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+          }}
+        >
           <h4 style={{ color: "#fff" }}>Low Stock Products (≤5)</h4>
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
+            <table
+              style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}
+            >
               <thead>
                 <tr>
                   {["Product", "Stock", "Price"].map((h, i) => (
-                    <th key={i} style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #555" }}>{h}</th>
+                    <th
+                      key={i}
+                      style={{
+                        textAlign: "left",
+                        padding: "0.6rem",
+                        borderBottom: "1px solid #555",
+                      }}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {(products ?? [])
-                  .filter(p => {
-                    const totalStock = Array.isArray(p.colors)
+                {lowStockProducts.map((p) => {
+                  const totalStock =
+                    Array.isArray(p.colors) && p.colors.length > 0
                       ? p.colors.reduce((sum, c) => sum + (c.stock ?? 0), 0)
-                      : 0;
-                    return totalStock <= 5;
-                  })
-                  .map(p => {
-                    const totalStock = Array.isArray(p.colors)
-                      ? p.colors.reduce((sum, c) => sum + (c.stock ?? 0), 0)
-                      : 0;
+                      : p.stock ?? 0;
 
-                    return (
-                      <tr key={p._id}>
-                        <td style={{ padding: "0.6rem" }}>{p.name}</td>
-                        <td style={{ padding: "0.6rem" }}>
-                          {Array.isArray(p.colors) && p.colors.length > 0
-                            ? p.colors.map(c => `${c.colorName ?? "No Name"}: ${c.stock}`).join(", ")
-                            : "0"}
-                        </td>
-                        <td style={{ padding: "0.6rem" }}>₹{p.price?.toLocaleString("en-IN") ?? 0}</td>
-                      </tr>
-                    );
-                  })}
-                {(!products || products.length === 0) && (
+                  return (
+                    <tr key={p._id}>
+                      <td style={{ padding: "0.6rem" }}>{p.name}</td>
+                      <td style={{ padding: "0.6rem" }}>
+                        {Array.isArray(p.colors) && p.colors.length > 0
+                          ? p.colors
+                              .map(
+                                (c) =>
+                                  `${c.colorName ?? "No Name"}: ${c.stock ?? 0}`
+                              )
+                              .join(", ")
+                          : totalStock}
+                      </td>
+                      <td style={{ padding: "0.6rem" }}>
+                        ₹{p.price?.toLocaleString("en-IN") ?? 0}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {lowStockProducts.length === 0 && (
                   <tr>
-                    <td colSpan={3} style={{ padding: "1rem", textAlign: "center" }}>No low stock products</td>
+                    <td colSpan={3} style={{ padding: "1rem", textAlign: "center" }}>
+                      No low stock products
+                    </td>
                   </tr>
                 )}
               </tbody>
