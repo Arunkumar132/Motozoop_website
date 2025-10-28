@@ -167,9 +167,7 @@ export const productType = defineType({
 });
 
 export const productTabs = [
-  { title: "Dashboard", value: "dashboard_accesories" },
-  { title: "Interior", value: "interior" },
-  { title: "Exterior", value: "exterior" },
-  { title: "Detailing", value: "detailing" },
+  { title: "Interior Accessories", value: "interior" },
+  { title: "Exterior Accessories", value: "exterior" },
   { title: "Car Care Products", value: "car_care_products" },
 ];
