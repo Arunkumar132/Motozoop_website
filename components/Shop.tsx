@@ -46,7 +46,6 @@ const Shop = ({ categories }: Props) => {
       let query = "";
 
       if (selectedCategory) {
-        // Check if selected category is a main category or subcategory
         query = `
           *[_type == 'product'
             && (
@@ -57,30 +56,19 @@ const Shop = ({ categories }: Props) => {
             && price <= $maxPrice
           ] | order(name asc) {
             ...,
-            category->{
-              title,
-              slug
-            },
-            brand->{
-              title
-            }
+            category->{ title, slug },
+            brand->{ title }
           }
         `;
       } else {
-        // Fetch all products if no category is selected
         query = `
           *[_type == 'product'
             && price >= $minPrice 
             && price <= $maxPrice
           ] | order(name asc) {
             ...,
-            category->{
-              title,
-              slug
-            },
-            brand->{
-              title
-            }
+            category->{ title, slug },
+            brand->{ title }
           }
         `;
       }
@@ -104,24 +92,20 @@ const Shop = ({ categories }: Props) => {
   }, [selectedCategory, selectedPrice]);
 
   const handleMainCategoryClick = (categorySlug: string) => {
-    // Close all other categories and only open the clicked one
     const newExpanded = new Set<string>();
-    
-    // If clicking the same category, toggle it (close)
-    // If clicking a different category, open only that one
     if (!expandedCategories.has(categorySlug)) {
       newExpanded.add(categorySlug);
     }
-    
     setExpandedCategories(newExpanded);
-
-    // Toggle selection
     setSelectedCategory(
       selectedCategory === categorySlug ? null : categorySlug
     );
   };
 
-  const handleSubCategoryClick = (subCategoryTitle: string, e: React.MouseEvent) => {
+  const handleSubCategoryClick = (
+    subCategoryTitle: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     setSelectedCategory(
       selectedCategory === subCategoryTitle ? null : subCategoryTitle
@@ -129,8 +113,8 @@ const Shop = ({ categories }: Props) => {
   };
 
   return (
-    <div className="border-t bg-white">
-      <Container className="mt-4 sm:mt-6">
+    <div className="border-t bg-white min-h-screen">
+      <Container className="mt-4 sm:mt-6 pb-20"> {/* Added padding-bottom for footer space */}
         {/* Header */}
         <div className="sticky top-0 z-20 bg-white py-3 sm:py-4 mb-4 sm:mb-5 border-b border-gray-200 flex items-center justify-between px-2">
           <Title className="text-base sm:text-lg font-semibold uppercase tracking-wide text-gray-800">
@@ -152,7 +136,7 @@ const Shop = ({ categories }: Props) => {
         {/* Layout */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
-          <aside className="md:sticky md:top-24 md:self-start md:h-[calc(100vh-160px)] md:min-w-60 md:max-w-xs bg-gray-50 md:bg-transparent p-4 md:p-2 rounded-lg md:rounded-none shadow-sm md:shadow-none">
+          <aside className="md:sticky md:top-24 md:self-start md:min-w-60 md:max-w-xs bg-gray-50 md:bg-transparent p-4 md:p-2 rounded-lg md:rounded-none shadow-sm md:shadow-none">
             {/* Product Categories */}
             <div className="mb-6">
               <h3 className="text-sm sm:text-base font-semibold text-black mb-3">
@@ -161,9 +145,10 @@ const Shop = ({ categories }: Props) => {
               <div className="flex flex-col gap-2">
                 {categories?.map((cat) => (
                   <div key={cat._id}>
-                    {/* Main Category */}
                     <div
-                      onClick={() => handleMainCategoryClick(cat.slug?.current || "")}
+                      onClick={() =>
+                        handleMainCategoryClick(cat.slug?.current || "")
+                      }
                       className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-normal text-black hover:text-shop_dark_green transition-colors py-1"
                     >
                       <input
@@ -175,7 +160,6 @@ const Shop = ({ categories }: Props) => {
                       <span>{cat.title}</span>
                     </div>
 
-                    {/* Subcategories - Show when category is expanded */}
                     {cat.subCategories &&
                       cat.subCategories.length > 0 &&
                       expandedCategories.has(cat.slug?.current || "") && (
@@ -183,7 +167,9 @@ const Shop = ({ categories }: Props) => {
                           {cat.subCategories.map((sub) => (
                             <div
                               key={sub.slug?.current || sub.title}
-                              onClick={(e) => handleSubCategoryClick(sub.title || "", e)}
+                              onClick={(e) =>
+                                handleSubCategoryClick(sub.title || "", e)
+                              }
                               className="flex items-center gap-2 cursor-pointer text-xs font-light text-gray-700 hover:text-shop_dark_green transition-colors py-1"
                             >
                               <input
@@ -239,24 +225,22 @@ const Shop = ({ categories }: Props) => {
 
           {/* Product Grid */}
           <main className="flex-1 pt-1 sm:pt-2">
-            <div className="h-auto md:h-[calc(100vh-160px)] overflow-y-auto md:pr-2 scrollbar-hide pb-10">
-              {loading ? (
-                <div className="p-16 sm:p-20 flex flex-col gap-3 items-center justify-center bg-white rounded-xl shadow-sm">
-                  <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-shop_dark_green animate-spin" />
-                  <p className="text-sm sm:text-base font-medium text-gray-600">
-                    Loading products...
-                  </p>
-                </div>
-              ) : products.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                  {products.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-                </div>
-              ) : (
-                <NoProductAvailable className="bg-white mt-2 sm:mt-0 p-8 sm:p-10 rounded-xl shadow-sm" />
-              )}
-            </div>
+            {loading ? (
+              <div className="p-16 sm:p-20 flex flex-col gap-3 items-center justify-center bg-white rounded-xl shadow-sm">
+                <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-shop_dark_green animate-spin" />
+                <p className="text-sm sm:text-base font-medium text-gray-600">
+                  Loading products...
+                </p>
+              </div>
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <NoProductAvailable className="bg-white mt-2 sm:mt-0 p-8 sm:p-10 rounded-xl shadow-sm" />
+            )}
           </main>
         </div>
       </Container>

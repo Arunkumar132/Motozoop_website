@@ -48,22 +48,22 @@ export default function ColorSelection({
   return (
     <div className="flex gap-3 flex-wrap">
       {colors.map((color, index) => {
-        const colorName = color.colorName ?? ""; // fallback to empty string
+        const colorName = color.colorName ?? "";
         const isSelected = selectedColor === colorName;
-        const hexColor = COLOR_MAP[colorName.toLowerCase()] || "#ccc"; // safe fallback
+        const hexColor = COLOR_MAP[colorName.toLowerCase()] || "#ccc";
+        const isOutOfStock = color.stock <= 0;
 
         return (
-          <button
-            key={index} // use index if colorName is missing
-            onClick={() => colorName && onSelectColor(colorName)}
-            disabled={color.stock <= 0 || !colorName}
-            className={`w-8 h-8 rounded-full border-2 transition ${
-              isSelected
-                ? "border-black scale-110"
-                : "border-gray-300 hover:scale-105"
-            }`}
-            style={{ backgroundColor: hexColor }}
-          ></button>
+          <div key={index} className="relative">
+            <button
+              onClick={() => colorName && onSelectColor(colorName)}
+              className={`w-8 h-8 rounded-full border-2 transition relative
+                ${isSelected ? "border-black scale-110" : "border-gray-300 hover:scale-105"}
+                ${isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}
+              `}
+              style={{ backgroundColor: hexColor }}
+            ></button>
+          </div>
         );
       })}
     </div>

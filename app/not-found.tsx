@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import Logo from "@/components/Logo"; // Ensure this path is correct in your project
-import "./globals.css";
+import Logo from "@/components/Logo";
 
 export const metadata = {
   title: "404 | MotoZoop",

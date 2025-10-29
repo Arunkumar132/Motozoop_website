@@ -91,10 +91,8 @@ export const productType = defineType({
       type: "string",
       options: {
         list: [
-          { title: "Dashboard Accessories", value: "dashboard_accessories" },
           { title: "Interior", value: "interior" },
           { title: "Exterior", value: "exterior" },
-          { title: "Detailing", value: "detailing" },
           { title: "Car Care Products", value: "car_care_products" },
         ],
       },

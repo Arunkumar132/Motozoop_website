@@ -1,4 +1,4 @@
-import React from "react";
+// app/(client)/page.tsx
 import Container from "@/components/Container";
 import HomeBanner from "@/components/HomeBanner";
 import HomeCategories from "@/components/HomeCategories";
@@ -6,7 +6,7 @@ import LatestBlog from "@/components/LatestBlog";
 import ProductGrid from "@/components/ProductGrid";
 import { getCategories } from "@/sanity/queries";
 
-const Home = async () => {
+export default async function HomePage() {
   const categories = await getCategories(6);
 
   return (
@@ -18,6 +18,7 @@ const Home = async () => {
 
       {/* ===== Product Grid Section ===== */}
       <section className="mb-10 md:mb-16">
+        {/* Client-side component must be dynamically imported */}
         <ProductGrid />
       </section>
 
@@ -32,6 +33,4 @@ const Home = async () => {
       </section>
     </Container>
   );
-};
-
-export default Home;
+}

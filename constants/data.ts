@@ -20,7 +20,7 @@ export const quickLinksData = [
 
 export const categoriesData = [
     { title: "Interior", href: "interior" },
-    { title: "Exteriors", href: "exterior" },
+    { title: "Exterior", href: "exterior" },
     { title: "Car Care Products", href: "car-care-product" },
 ];
 
