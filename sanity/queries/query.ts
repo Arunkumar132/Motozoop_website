@@ -118,3 +118,42 @@ const MY_ORDERS_QUERY = defineQuery(`
 
 
 export { LATEST_BLOG_QUERY, DEAL_PRODUCTS, PRODUCTS_BY_SLUG_QUERY, GET_ALL_BLOG, SINGLE_BLOG, BLOG_CATEGORIES, OTHER_BLOGS, MY_ORDERS_QUERY };
+
+export const PRODUCTS_BY_CATEGORY_QUERY = defineQuery(`
+  *[_type == "product" && $categoryId in categories[]._ref]{
+    _id,
+    name,
+    slug,
+    price,
+    discount,
+    description,
+    overview,
+    status,
+    brand->{
+      title
+    },
+    categories[]->{
+      _id,
+      title,
+      slug
+    },
+    colors[]{
+      colorName,
+      stock,
+      images[]{
+        asset->{
+          _id,
+          url
+        }
+      }
+    }
+  }
+`);
+
+export const CATEGORY_BY_SLUG_QUERY = defineQuery(`
+  *[_type == "category" && slug.current == $slug][0]{
+    _id,
+    title,
+    slug
+  }
+`);

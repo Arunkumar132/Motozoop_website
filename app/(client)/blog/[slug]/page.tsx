@@ -1,4 +1,4 @@
-// app/blog/[slug]/page.tsx
+// app/(client)/blog/[slug]/page.tsx
 import React from "react";
 import Container from "@/components/Container";
 import { urlFor } from "@/sanity/lib/image";
@@ -12,15 +12,16 @@ import Link from "next/link";
 import { Title } from "@/components/Title";
 import { Blog } from "@/sanity.types";
 
+// ------------------- Props -------------------
 interface SingleBlogPageProps {
-  params: { slug: string };
+  params: { slug: string }; // slug is always a string
 }
 
-// ✅ Server Component: can be async
+// ------------------- Main Blog Page -------------------
 const SingleBlogPage = async ({ params }: SingleBlogPageProps) => {
-  const { slug } = params; // ✅ no await
+  const { slug } = params; // ✅ DO NOT use `await` here
+  const blog: Blog | null = await getSingleBlog(slug);
 
-  const blog = await getSingleBlog(slug);
   if (!blog) return notFound();
 
   return (
@@ -133,7 +134,7 @@ const SingleBlogPage = async ({ params }: SingleBlogPageProps) => {
   );
 };
 
-// ✅ Sidebar as Server Component
+// ------------------- Sidebar Component -------------------
 const BlogLeft = async ({ slug }: { slug: string }) => {
   const categories = await getBlogCategories();
   const latestBlogs = await getOthersBlog(slug, 5);
@@ -144,8 +145,12 @@ const BlogLeft = async ({ slug }: { slug: string }) => {
       <div className="border border-lightColor p-5 rounded-md mt-10">
         <p className="text-xl font-semibold text-shop_dark_green">Latest Blogs</p>
         <div className="space-y-4 mt-4">
-          {latestBlogs?.map((blog: Blog, index: number) => (
-            <Link href={/blog/${blog?.slug?.current}} key={index} className="flex items-center gap-2 group">
+          {latestBlogs?.map((blog, index) => (
+            <Link
+              href={`/blog/${blog?.slug?.current}`}
+              key={index}
+              className="flex items-center gap-2 group"
+            >
               {blog?.mainImage && (
                 <Image
                   src={urlFor(blog.mainImage).url()}
@@ -155,7 +160,9 @@ const BlogLeft = async ({ slug }: { slug: string }) => {
                   className="w-16 h-16 object-cover rounded-full border-[1px] border-shop_dark_green/10 group-hover:border-shop_dark_green"
                 />
               )}
-              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green">{blog?.title}</p>
+              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green">
+                {blog?.title}
+              </p>
             </Link>
           ))}
         </div>

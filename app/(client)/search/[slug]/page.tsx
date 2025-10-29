@@ -1,8 +1,17 @@
 import { client } from "@/lib/sanityClient";
 import Image from "next/image";
+import Link from "next/link";
 
-// Helper function to fetch a product by slug
-async function getProductBySlug(slug: string) {
+type Product = {
+  _id: string;
+  name: string;
+  price: number;
+  description?: string;
+  imageUrl?: string;
+  stock?: number;
+};
+
+async function getProductBySlug(slug: string): Promise<Product | null> {
   return client.fetch(
     `*[_type=="product" && slug.current==$slug][0]{
       _id,
@@ -17,15 +26,19 @@ async function getProductBySlug(slug: string) {
 }
 
 export default async function SingleProductPage({ params }: { params: { slug: string } }) {
-  const slug = await params.slug; // await is needed in app router
-  const product = await getProductBySlug(slug);
+  const { slug } = params;
+  const product: Product | null = await getProductBySlug(slug);
 
   if (!product) return <p className="p-4">Product not found.</p>;
 
-  const isStock = product?.stock > 0;
+  const isStock = product.stock && product.stock > 0;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
+      <Link href="/products" className="text-blue-600 hover:underline mb-4 block">
+        ← Back to Products
+      </Link>
+
       <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
 
       {product.imageUrl ? (
@@ -42,7 +55,10 @@ export default async function SingleProductPage({ params }: { params: { slug: st
         </div>
       )}
 
-      <p className="text-lg font-semibold mb-2">₹{product.price}</p>
+      <p className="text-lg font-semibold mb-2">
+        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(product.price)}
+      </p>
+
       <p className="mb-2">{isStock ? "In Stock" : "Out of Stock"}</p>
       <p>{product.description || "No description available."}</p>
     </div>

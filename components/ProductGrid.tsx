@@ -2,35 +2,37 @@
 
 import { useEffect, useState } from "react";
 import HomeTabBar from "./HomeTabBar";
-import { productType } from "@/constants/data";
-import { client } from "@/sanity/lib/client";
 import { AnimatePresence, motion } from "motion/react";
 import { Loader2 } from "lucide-react";
 import NoProductAvailable from "./NoProductAvailable";
 import ProductCard from "./ProductCard";
 import { Product } from "@/sanity.types";
+import { client } from "@/sanity/lib/client";
+import { productTabs } from "@/sanity/schemaTypes/productType";
 
 const ProductGrid = () => {
-  // ✅ default = first item in productType, fallback to "all"
-  const [selectedTab, setSelectedTab] = useState<string>(
-    productType[1]?.value || "all"
-  );
-
+  const [selectedTab, setSelectedTab] = useState<string>(productTabs[0].value);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-
-      const query = `*[_type == 'product' && varient == $variant] | order(name desc) {
-        ...,
-        "categories": categories[]->title
-      }`;
-
-      const params = { variant: selectedTab?.toLowerCase() || "all" };
-
       try {
+        const query = `
+          *[_type=="product" && variant==$variant] | order(_createdAt desc){
+            _id,
+            name,
+            price,
+            discount,
+            variant,
+            slug,
+            status,
+            category->{_id,title},
+            colors[]{colorName, stock, images[]{asset->{_id,url}}}
+          }
+        `;
+        const params = { variant: selectedTab };
         const response: Product[] = await client.fetch(query, params);
         setProducts(response);
       } catch (error) {
@@ -46,13 +48,17 @@ const ProductGrid = () => {
 
   return (
     <div>
-      <HomeTabBar selectedTab={selectedTab} onTabSelect={setSelectedTab} />
+      <HomeTabBar
+        selectedTab={selectedTab}
+        onTabSelect={setSelectedTab}
+        categories={productTabs.map((tab) => tab.title)}
+      />
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-10 min-h-[20rem] gap-4 bg-gray-100 w-full mt-10 rounded-lg">
           <div className="flex items-center gap-2 text-shop_dark_green">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Product is loading...</span>
+            <span>Loading {selectedTab} products...</span>
           </div>
         </div>
       ) : products.length > 0 ? (

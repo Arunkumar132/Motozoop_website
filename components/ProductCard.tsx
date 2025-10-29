@@ -1,36 +1,36 @@
 "use client";
 
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { Product } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
 import { Flame } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import React from "react";
+import { cn } from "@/lib/utils";
 import { Title } from "./Title";
 import PriceView from "./PriceView";
-import { cn } from "@/lib/utils";
 import ProductSideMenu from "./ProductSideMenu";
 
-const ProductCard = ({ product }: { product: Product }) => {
+interface ProductCardProps {
+  product: Product;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const productSlug = product.slug?.current || "";
 
   // Safe first color and image
-  const firstColor = product?.colors?.[0];
+  const firstColor = product.colors?.[0];
   const firstImage = firstColor?.images?.[0];
   const imageUrl = firstImage?.asset ? urlFor(firstImage).url() : null;
 
-  // Correct total stock calculation
-  const totalStock = product?.colors?.reduce((sum: number, color: any) => {
-  const stock = Number(color?.stock ?? 0);
-  return sum + (isNaN(stock) ? 0 : stock);
-}, 0) ?? 0;
+  // Total stock calculation
+  const totalStock =
+    product.colors?.reduce((sum, color) => {
+      const stock = Number(color?.stock ?? 0);
+      return sum + (isNaN(stock) ? 0 : stock);
+    }, 0) ?? 0;
 
-const isInStock = totalStock > 0;
-
-console.log("Product colors:", product.colors);
-console.log("Total stock:", totalStock);
-
-
+  const isInStock = totalStock > 0;
 
   return (
     <div className="text-sm border border-dark_blue/20 rounded-md bg-white group relative overflow-hidden">
@@ -40,7 +40,7 @@ console.log("Total stock:", totalStock);
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={product?.name || "Product Image"}
+              alt={product.name || "Product Image"}
               loading="lazy"
               width={700}
               height={700}
@@ -59,13 +59,13 @@ console.log("Total stock:", totalStock);
         <ProductSideMenu product={product} />
 
         {/* Status badges */}
-        {["sale", "new"].includes(product?.status || "") && (
+        {["sale", "new"].includes(product.status || "") && (
           <p className="absolute top-2 left-2 z-10 text-xs border border-darkColor/50 px-2 rounded-full group-hover:border-shop_light_green group-hover:text-shop_light_green hoverEffect">
             {product.status === "sale" ? "Sale" : "New!"}
           </p>
         )}
 
-        {product?.status === "hot" && (
+        {product.status === "hot" && (
           <Link
             href="/deal"
             className="absolute top-2 left-2 z-10 text-xs border border-darkColor/50 px-2 rounded-full group-hover:border-shop_light_green group-hover:text-shop_light_green hoverEffect"
@@ -82,17 +82,17 @@ console.log("Total stock:", totalStock);
 
       {/* Product info */}
       <div className="p-3 flex flex-col gap-2">
-        {/* Categories */}
-        {product?.categories && (
+        {/* Category */}
+        {product.category?.title && (
           <p className="uppercase line-clamp-1 text-xs text-shop_light_text">
-            {product.categories.map((cat: any) => cat.title).join(", ")}
+            {product.category.title}
           </p>
         )}
 
         {/* Product title */}
         <Link href={`/product/${productSlug}`} className="block">
           <Title className="text-sm line-clamp-1 cursor-pointer">
-            {product?.name}
+            {product.name}
           </Title>
         </Link>
 
@@ -111,11 +111,10 @@ console.log("Total stock:", totalStock);
 
         {/* Price */}
         <PriceView
-          price={product?.price ?? 0}
-          discount={product?.discount ?? 0}
+          price={product.price ?? 0}
+          discount={product.discount ?? 0}
           className="text-sm"
         />
-
       </div>
     </div>
   );

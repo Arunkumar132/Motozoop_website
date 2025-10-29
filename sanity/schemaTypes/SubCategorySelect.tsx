@@ -3,10 +3,9 @@ import { StringInputProps, useClient, useFormValue, set, unset } from "sanity";
 import { Stack, Text, Select } from "@sanity/ui";
 
 interface SubCategory {
+  _key: string; // Added _key
   title: string;
-  slug?: {
-    current?: string;
-  };
+  slug?: { current?: string };
 }
 
 export function SubCategorySelect(props: StringInputProps) {
@@ -29,7 +28,7 @@ export function SubCategorySelect(props: StringInputProps) {
 
     client
       .fetch(
-        `*[_type == "category" && _id == $id][0]{ subCategories[]{ title, slug } }`,
+        `*[_type == "category" && _id == $id][0]{ subCategories[]{ _key, title, slug } }`,
         { id: categoryRef._ref }
       )
       .then((category) => {
@@ -98,16 +97,13 @@ export function SubCategorySelect(props: StringInputProps) {
         value={value || ""}
         onChange={(event) => {
           const newValue = event.currentTarget.value;
-          if (newValue) {
-            onChange(set(newValue)); // ✅ Correct Sanity patch event
-          } else {
-            onChange(unset()); // ✅ Removes value if user selects "empty"
-          }
+          if (newValue) onChange(set(newValue));
+          else onChange(unset());
         }}
       >
         <option value="">-- Select a subcategory --</option>
-        {subCategories.map((subCat, index) => (
-          <option key={subCat.slug?.current || index} value={subCat.title}>
+        {subCategories.map((subCat) => (
+          <option key={subCat._key} value={subCat.title}>
             {subCat.title}
           </option>
         ))}

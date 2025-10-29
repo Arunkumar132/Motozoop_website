@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@/components/Container";
 import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImageView from "@/components/ImageView";
 import PriceView from "@/components/PriceView";
 import ColorSelection from "@/components/ColorSelection";
-import StatueSelector from "@/components/StatueSelector";
 import DeliveryCheckWrapper from "@/components/DeliveryCheckWrapper";
 import ReturnModal from "@/components/ReturnModal";
 import BuyNow from "@/components/BuyNow";
@@ -15,26 +14,52 @@ import DynamicStockDisplay from "@/components/DynamicStockDisplay";
 import { getProductBySlug } from "@/sanity/queries";
 import { CornerDownLeft } from "lucide-react";
 
+// ------------------- Type Definitions -------------------
+type Color = {
+  colorName: string;
+  stock: number;
+  images: { asset?: { _ref: string } }[];
+};
+
+type Statue = {
+  name: string;
+  stock: number;
+};
+
+type Product = {
+  name: string;
+  description?: string;
+  slug: string;
+  price: number;
+  discount?: number;
+  stock?: number;
+  colors?: Color[];
+  statues?: Statue[];
+};
+
 interface Props {
-  params: { slug: string } | Promise<{ slug: string }>;
+  params: { slug: string };
 }
 
+// ------------------- Single Product Page -------------------
 export default function SingleProductPage({ params }: Props) {
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  // Unwrap params (Next.js 14+)
-  const { slug } = use(params);
+  const { slug } = params;
 
+  // Fetch product on mount
   useEffect(() => {
     async function fetchProduct() {
-      const data = await getProductBySlug(slug);
-      setProduct(data);
+      try {
+        const data: Product = await getProductBySlug(slug);
+        setProduct(data);
 
-      // Set first available color as default
-      if (Array.isArray(data.colors) && data.colors.length > 0) {
-        const firstAvailableColor = data.colors.find((c: any) => c.stock > 0);
-        setSelectedColor(firstAvailableColor ? firstAvailableColor.colorName : null);
+        // Set first available color as default
+        const firstAvailableColor = data.colors?.find(c => c.stock > 0);
+        setSelectedColor(firstAvailableColor?.colorName ?? null);
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
       }
     }
     fetchProduct();
@@ -43,9 +68,7 @@ export default function SingleProductPage({ params }: Props) {
   if (!product) {
     return (
       <Container className="py-10 text-center">
-        <h2 className="text-2xl font-semibold text-red-600">
-          Product not found
-        </h2>
+        <h2 className="text-2xl font-semibold text-red-600">Product not found</h2>
       </Container>
     );
   }
@@ -53,22 +76,20 @@ export default function SingleProductPage({ params }: Props) {
   const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
   const hasStatues = Array.isArray(product.statues) && product.statues.length > 0;
 
-  // Total stock if no color selected
   const totalStock = hasColors
-    ? product.colors.reduce((sum: number, c: any) => sum + (c.stock || 0), 0)
+    ? product.colors.reduce((sum, c) => sum + (c.stock || 0), 0)
     : product.stock || 0;
 
-  // Images filtered by selected color
   const imagesToShow =
     selectedColor && hasColors
-      ? product.colors.find((c: any) => c.colorName === selectedColor)?.images || []
+      ? product.colors.find(c => c.colorName === selectedColor)?.images || []
       : hasColors
-      ? product.colors.flatMap((c: any) => c.images || [])
+      ? product.colors.flatMap(c => c.images || [])
       : [];
 
   return (
     <Container className="flex flex-col md:flex-row gap-10 pb-10">
-      {/* Product Image */}
+      {/* Product Images */}
       <ImageView key={selectedColor || "all"} images={imagesToShow} isStock={totalStock} />
 
       {/* Product Info */}
@@ -89,7 +110,6 @@ export default function SingleProductPage({ params }: Props) {
             discount={product.discount}
             className="text-2xl font-bold"
           />
-
           <DynamicStockDisplay
             colors={product.colors || []}
             totalStock={totalStock}
@@ -104,7 +124,7 @@ export default function SingleProductPage({ params }: Props) {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Choose Color</h3>
                 <ColorSelection
-                  colors={product.colors.map((c: any) => ({
+                  colors={product.colors.map(c => ({
                     colorName: c.colorName,
                     stock: c.stock,
                   }))}
@@ -116,20 +136,22 @@ export default function SingleProductPage({ params }: Props) {
           </div>
         )}
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <div className="flex items-center justify-start gap-4 w-full">
           <div className="flex-1 h-12">
             <AddToCartButton
               product={product}
-              selectedColor={selectedColor} // if applicable
+              selectedColor={selectedColor}
               className="w-full h-full text-base"
+              disabled={totalStock === 0}
             />
           </div>
           <div className="flex-1 h-12">
             <BuyNow
               product={product}
-              selectedColor={selectedColor} // pass selected color
+              selectedColor={selectedColor}
               className="w-full h-full text-base"
+              disabled={totalStock === 0}
             />
           </div>
           <div className="h-12 w-12 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition">

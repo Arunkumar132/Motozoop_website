@@ -66,9 +66,9 @@ const AboutPage = () => {
           </h2>
           <p className="text-gray-700 text-base md:text-lg leading-relaxed">
             At MotoZoop, we understand that every car is as unique as its owner.
-            That’s why we offer an extensive range of premium car accessories,
+            That&apos;s why we offer an extensive range of premium car accessories,
             carefully selected to cater to various tastes and preferences. From
-            sleek interior upgrades to rugged exterior enhancements, we’ve got
+            sleek interior upgrades to rugged exterior enhancements, we&apos;ve got
             everything you need to personalize your ride and make a bold
             statement on the road.
           </p>

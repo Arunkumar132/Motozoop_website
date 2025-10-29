@@ -1,6 +1,6 @@
 import { serverClient } from "@/lib/sanity.server";
 import { sanityFetch } from "../lib/live";
-import { BLOG_CATEGORIES, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, MY_ORDERS_QUERY, OTHER_BLOGS, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
+import { BLOG_CATEGORIES, CATEGORY_BY_SLUG_QUERY, DEAL_PRODUCTS, GET_ALL_BLOG, LATEST_BLOG_QUERY, MY_ORDERS_QUERY, OTHER_BLOGS, PRODUCTS_BY_CATEGORY_QUERY, PRODUCTS_BY_SLUG_QUERY, SINGLE_BLOG } from "./query";
 
 const getCategories = async (quantity?: number) => {
   try {
@@ -121,3 +121,26 @@ const getOrders = async (userId: string) => {
 };
 
 export { getCategories, getLatestBlogs, getDealProducts, getProductBySlug, getAllBlogs, getSingleBlog, getOthersBlog, getBlogCategories, getOrders };
+
+
+export async function getProductsByCategoryId(categoryId: string) {
+  if (!categoryId) return [];
+  try {
+    const products = await serverClient.fetch(PRODUCTS_BY_CATEGORY_QUERY, { categoryId });
+    return products;
+  } catch (error) {
+    console.error("❌ Error fetching products by category ID:", error);
+    return [];
+  }
+}
+
+export async function getCategoryBySlug(slug: string) {
+  if (!slug) return null;
+  try {
+    const category = await serverClient.fetch(CATEGORY_BY_SLUG_QUERY, { slug });
+    return category;
+  } catch (error) {
+    console.error("❌ Error fetching category by slug:", error);
+    return null;
+  }
+}

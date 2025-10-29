@@ -46,8 +46,6 @@ import { generateOrderId } from "@/components/orderid";
 const CartPage = () => {
   const {
     deleteCartProduct,
-    getTotalPrice,
-    getSubTotalPrice,
     resetCart,
     getGroupedItems,
     updateCartQuantity
