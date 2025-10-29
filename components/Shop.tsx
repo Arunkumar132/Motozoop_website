@@ -27,6 +27,9 @@ const Shop = ({ categories }: Props) => {
   const [selectedPrice, setSelectedPrice] = useState<string | null>(
     priceParams || null
   );
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -40,15 +43,47 @@ const Shop = ({ categories }: Props) => {
         maxPrice = max;
       }
 
-      const query = `
-        *[_type == 'product'
-          && (!defined($selectedCategory) || references(*[_type == "category" && slug.current == $selectedCategory]._id))
-          && price >= $minPrice && price <= $maxPrice
-        ] | order(name asc) {
-          ...,
-          "categories": categories[]->title
-        }
-      `;
+      let query = "";
+
+      if (selectedCategory) {
+        // Check if selected category is a main category or subcategory
+        query = `
+          *[_type == 'product'
+            && (
+              references(*[_type == "category" && slug.current == $selectedCategory]._id)
+              || subCategory == $selectedCategory
+            )
+            && price >= $minPrice 
+            && price <= $maxPrice
+          ] | order(name asc) {
+            ...,
+            category->{
+              title,
+              slug
+            },
+            brand->{
+              title
+            }
+          }
+        `;
+      } else {
+        // Fetch all products if no category is selected
+        query = `
+          *[_type == 'product'
+            && price >= $minPrice 
+            && price <= $maxPrice
+          ] | order(name asc) {
+            ...,
+            category->{
+              title,
+              slug
+            },
+            brand->{
+              title
+            }
+          }
+        `;
+      }
 
       const data = await client.fetch(
         query,
@@ -67,6 +102,31 @@ const Shop = ({ categories }: Props) => {
   useEffect(() => {
     fetchProducts();
   }, [selectedCategory, selectedPrice]);
+
+  const handleMainCategoryClick = (categorySlug: string) => {
+    // Close all other categories and only open the clicked one
+    const newExpanded = new Set<string>();
+    
+    // If clicking the same category, toggle it (close)
+    // If clicking a different category, open only that one
+    if (!expandedCategories.has(categorySlug)) {
+      newExpanded.add(categorySlug);
+    }
+    
+    setExpandedCategories(newExpanded);
+
+    // Toggle selection
+    setSelectedCategory(
+      selectedCategory === categorySlug ? null : categorySlug
+    );
+  };
+
+  const handleSubCategoryClick = (subCategoryTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedCategory(
+      selectedCategory === subCategoryTitle ? null : subCategoryTitle
+    );
+  };
 
   return (
     <div className="border-t bg-white">
@@ -98,27 +158,46 @@ const Shop = ({ categories }: Props) => {
               <h3 className="text-sm sm:text-base font-semibold text-black mb-3">
                 Product Categories
               </h3>
-              <div className="flex flex-wrap md:flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 {categories?.map((cat) => (
-                  <label
-                    key={cat._id}
-                    onClick={() =>
-                      setSelectedCategory(
-                        selectedCategory === cat.slug?.current
-                          ? null
-                          : cat.slug?.current || null
-                      )
-                    }
-                    className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-normal text-black"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedCategory === cat.slug?.current}
-                      readOnly
-                      className="w-4 h-4 border-gray-400 rounded-sm"
-                    />
-                    {cat.title}
-                  </label>
+                  <div key={cat._id}>
+                    {/* Main Category */}
+                    <div
+                      onClick={() => handleMainCategoryClick(cat.slug?.current || "")}
+                      className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-normal text-black hover:text-shop_dark_green transition-colors py-1"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategory === cat.slug?.current}
+                        readOnly
+                        className="w-4 h-4 border-gray-400 rounded-sm cursor-pointer pointer-events-none"
+                      />
+                      <span>{cat.title}</span>
+                    </div>
+
+                    {/* Subcategories - Show when category is expanded */}
+                    {cat.subCategories &&
+                      cat.subCategories.length > 0 &&
+                      expandedCategories.has(cat.slug?.current || "") && (
+                        <div className="ml-6 mt-1 flex flex-col gap-1">
+                          {cat.subCategories.map((sub) => (
+                            <div
+                              key={sub.slug?.current || sub.title}
+                              onClick={(e) => handleSubCategoryClick(sub.title || "", e)}
+                              className="flex items-center gap-2 cursor-pointer text-xs font-light text-gray-700 hover:text-shop_dark_green transition-colors py-1"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedCategory === sub.title}
+                                readOnly
+                                className="w-3.5 h-3.5 border-gray-400 rounded-sm cursor-pointer pointer-events-none"
+                              />
+                              <span>{sub.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -134,25 +213,25 @@ const Shop = ({ categories }: Props) => {
                   { label: "200-500", value: "200-500" },
                   { label: "500-1000", value: "500-1000" },
                   { label: "1000-5000", value: "1000-5000" },
-                  { label: "Over 5000", value: "5000-10000" },
+                  { label: "Over 5000", value: "5000-1000000" },
                 ].map((price) => (
-                  <label
+                  <div
                     key={price.value}
                     onClick={() =>
                       setSelectedPrice(
                         selectedPrice === price.value ? null : price.value
                       )
                     }
-                    className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-normal text-black"
+                    className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-normal text-black hover:text-shop_dark_green transition-colors py-1"
                   >
                     <input
                       type="checkbox"
                       checked={selectedPrice === price.value}
                       readOnly
-                      className="w-4 h-4 border-gray-400 rounded-sm"
+                      className="w-4 h-4 border-gray-400 rounded-sm cursor-pointer pointer-events-none"
                     />
-                    {price.label}
-                  </label>
+                    <span>{price.label}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -170,8 +249,8 @@ const Shop = ({ categories }: Props) => {
                 </div>
               ) : products.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                  {products?.map((product) => (
-                    <ProductCard key={product?._id} product={product} />
+                  {products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
               ) : (
