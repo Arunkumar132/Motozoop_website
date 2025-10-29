@@ -63,8 +63,11 @@ export default function SearchBar() {
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setResults(data.products || []);
-      } catch (err: any) {
-        if (err.name !== "AbortError") setError("Search failed.");
+      } catch (err: unknown) {
+        // ✅ Use type guard instead of "any"
+        if (err instanceof Error && err.name !== "AbortError") {
+          setError("Search failed.");
+        }
       } finally {
         setLoading(false);
       }

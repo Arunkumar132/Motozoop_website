@@ -1,7 +1,14 @@
 "use client";
 
+// ✅ Define a proper Color interface
+interface Color {
+  colorName: string;
+  stock: number;
+}
+
+// ✅ Use the Color type instead of `any`
 interface DynamicStockDisplayProps {
-  colors: any[];
+  colors: Color[];
   totalStock: number;
   selectedColor: string | null;
 }

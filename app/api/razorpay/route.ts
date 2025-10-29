@@ -1,18 +1,24 @@
 import Razorpay from "razorpay";
 import { NextResponse } from "next/server";
 
+// Define the expected error type
+interface RazorpayError {
+  message?: string;
+  stack?: string;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { amount } = body;
+    const { amount } = body as { amount: number };
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
     const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+      key_id: process.env.RAZORPAY_KEY_ID as string,
+      key_secret: process.env.RAZORPAY_KEY_SECRET as string,
     });
 
     const options = {
@@ -29,8 +35,9 @@ export async function POST(req: Request) {
       amount: order.amount,
       currency: order.currency,
     });
-  } catch (error: any) {
-    console.error("Error creating order:", error);
+  } catch (error) {
+    const err = error as RazorpayError;
+    console.error("Error creating order:", err.message || err);
     return NextResponse.json(
       { error: "Failed to create Razorpay order" },
       { status: 500 }

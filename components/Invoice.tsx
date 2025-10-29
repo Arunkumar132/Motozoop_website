@@ -8,13 +8,44 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Image from "next/image";
 
+// ---------- Interfaces ----------
+interface Address {
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  mobile?: string;
+}
+
+interface ProductRef {
+  name?: string;
+  price?: string;
+  discount?: string;
+}
+
+interface OrderProduct {
+  product: ProductRef;
+  quantity: string;
+}
+
+interface Order {
+  invoiceId?: string;
+  orderNumber?: string;
+  orderDate?: string;
+  status?: string;
+  address?: Address;
+  products?: OrderProduct[];
+}
+
 interface InvoiceProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: any;
+  order: Order | null;
 }
 
-const formatAddressForDisplay = (addr: any) => {
+// ---------- Helper Functions ----------
+const formatAddressForDisplay = (addr?: Address) => {
   if (!addr) {
     return <p className="text-gray-600 text-xs">Customer address not provided</p>;
   }
@@ -33,10 +64,10 @@ const formatAddressForDisplay = (addr: any) => {
   );
 };
 
-const formatAddressForPDF = (addr: any) => {
+const formatAddressForPDF = (addr?: Address): string[] => {
   if (!addr) return ["Customer address not provided"];
 
-  const lines = [];
+  const lines: string[] = [];
   if (addr.name) lines.push(addr.name);
   if (addr.address) lines.push(addr.address);
 
@@ -48,6 +79,7 @@ const formatAddressForPDF = (addr: any) => {
   return lines;
 };
 
+// ---------- Component ----------
 const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
   const [logoBase64, setLogoBase64] = React.useState<string | null>(null);
   const [downloading, setDownloading] = React.useState(false);
@@ -64,13 +96,13 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
 
   if (!order) return null;
 
-  // Map products
+  // ---------- Product Calculation ----------
   const products =
-    order.products?.map((item: any) => {
+    order.products?.map((item) => {
       const productRef = item.product;
-      const price = parseFloat(productRef?.price) || 0;
-      const discount = parseFloat(productRef?.discount) || 0;
-      const quantity = parseInt(item.quantity) || 1;
+      const price = parseFloat(productRef?.price ?? "0") || 0;
+      const discount = parseFloat(productRef?.discount ?? "0") || 0;
+      const quantity = parseInt(item.quantity ?? "1") || 1;
       const discountedPrice = +(price * (1 - discount / 100)).toFixed(2);
       const subtotal = discountedPrice * quantity;
 
@@ -86,11 +118,11 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
 
   const totalPrice = products.reduce((sum, p) => sum + p.subtotal, 0);
 
+  // ---------- PDF Generation ----------
   const handleDownloadInvoice = async () => {
     setDownloading(true);
     const doc = new jsPDF("p", "mm", "a4");
 
-    // Add centered logo (large and clear)
     if (logoBase64) {
       const imgWidth = 80;
       const imgHeight = 80 * 0.4;
@@ -101,7 +133,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     const headerBottomY = 10 + 80 * 0.4 + 10;
     doc.line(14, headerBottomY, 195, headerBottomY);
 
-    // Company Info
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("MotoZoop", 14, headerBottomY + 10);
@@ -111,7 +142,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     doc.text("Dharapuram, Tamil Nadu", 14, headerBottomY + 21);
     doc.text("support@motozoop.com | +91 98765 43210", 14, headerBottomY + 26);
 
-    // Invoice Header
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("INVOICE", 14, headerBottomY + 38);
@@ -121,17 +151,22 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     doc.text(`Invoice : ${order.invoiceId ?? "N/A"}`, 14, headerBottomY + 46);
     doc.text(`Order : ${order.orderNumber ?? "N/A"}`, 14, headerBottomY + 52);
     doc.text(
-      `Date: ${order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"}`,
+      `Date: ${
+        order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"
+      }`,
       14,
       headerBottomY + 58
     );
     doc.text(
-      `Status: ${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "Pending"}`,
+      `Status: ${
+        order.status
+          ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
+          : "Pending"
+      }`,
       14,
       headerBottomY + 64
     );
 
-    // Address
     doc.setFont("helvetica", "bold");
     doc.text("Delivery Address:", 14, headerBottomY + 74);
     doc.setFont("helvetica", "normal");
@@ -140,7 +175,6 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
       doc.text(line, 14, headerBottomY + 86 + index * 6);
     });
 
-    // Products Table
     const tableStartY = headerBottomY + 80 + addressLines.length * 6 + 10;
     const rows = products.map((p, i) => [
       i + 1,
@@ -155,17 +189,8 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
       head: [["#", "Product", "Qty", "Price", "Subtotal"]],
       body: rows,
       theme: "grid",
-      headStyles: {
-        fillColor: [34, 197, 94],
-        textColor: 255,
-        fontSize: 10,
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 4,
-        font: "helvetica",
-        overflow: "linebreak",
-      },
+      headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 10 },
+      styles: { fontSize: 10, cellPadding: 4, font: "helvetica", overflow: "linebreak" },
       columnStyles: {
         0: { cellWidth: 10 },
         1: { cellWidth: 85 },
@@ -175,15 +200,15 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
       },
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    // ✅ Correct type for jsPDF with autoTable
+    const finalY =
+      (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 200;
 
-    // Total Amount (proper right alignment)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("Total Amount:", 140, finalY);
-    doc.text(`Rs. ${(totalPrice+75).toFixed(2)}`, 195, finalY, { align: "right" });
+    doc.text(`Rs. ${(totalPrice + 75).toFixed(2)}`, 195, finalY, { align: "right" });
 
-    // Footer
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text("Thank you for shopping with MotoZoop!", 14, finalY + 15);
@@ -193,6 +218,7 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
     setDownloading(false);
   };
 
+  // ---------- JSX ----------
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-4 bg-white rounded-lg shadow-lg">
@@ -215,7 +241,9 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
             <p className="text-xs text-gray-500 leading-tight">
               174/2, Goundachiputhur Road, Ellis Nagar, Dharapuram, Tamil Nadu
             </p>
-            <p className="text-xs text-gray-500">support@motozoop.com | +91 98765 43210</p>
+            <p className="text-xs text-gray-500">
+              support@motozoop.com | +91 98765 43210
+            </p>
           </div>
         </div>
 
@@ -230,7 +258,9 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
             </p>
             <p>
               <strong>Date:</strong>{" "}
-              {order.orderDate ? format(new Date(order.orderDate), "dd/MM/yyyy") : "--/--/----"}
+              {order.orderDate
+                ? format(new Date(order.orderDate), "dd/MM/yyyy")
+                : "--/--/----"}
             </p>
           </div>
           <div className="text-right">
@@ -241,7 +271,9 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "Pending"}
+              {order.status
+                ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
+                : "Pending"}
             </span>
           </div>
         </div>
@@ -271,38 +303,43 @@ const Invoice: React.FC<InvoiceProps> = ({ open, onOpenChange, order }) => {
                   <td className="p-1 border">{p.name}</td>
                   <td className="p-1 border">{p.quantity}</td>
                   <td className="p-1 border">Rs. {p.discountedPrice.toFixed(2)}</td>
-                  <td className="p-1 border font-medium text-right">Rs. {p.subtotal.toFixed(2)}</td>
+                  <td className="p-1 border font-medium text-right">
+                    Rs. {p.subtotal.toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-{/* Amount Summary */}
-<div className="mb-3 text-xs w-full">
-  <table className="w-full">
-    <tbody>
-      <tr>
-        <td className="p-1 text-right w-2/5">Subtotal:</td>
-        <td className="p-1 text-right w-3/5">Rs. {totalPrice.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td className="p-1 text-right w-2/5">Delivery Charge:</td>
-        <td className="p-1 text-right w-3/5">Rs. 75.00</td>
-      </tr>
-      <tr className="font-bold">
-        <td className="p-1 text-right w-2/5">Total Amount:</td>
-        <td className="p-1 text-right w-3/5">Rs. {(totalPrice + 75).toFixed(2)}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
+        {/* Amount Summary */}
+        <div className="mb-3 text-xs w-full">
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td className="p-1 text-right w-2/5">Subtotal:</td>
+                <td className="p-1 text-right w-3/5">
+                  Rs. {totalPrice.toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td className="p-1 text-right w-2/5">Delivery Charge:</td>
+                <td className="p-1 text-right w-3/5">Rs. 75.00</td>
+              </tr>
+              <tr className="font-bold">
+                <td className="p-1 text-right w-2/5">Total Amount:</td>
+                <td className="p-1 text-right w-3/5">
+                  Rs. {(totalPrice + 75).toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* Footer */}
         <div className="border-t pt-3 text-center text-xs text-gray-500 mt-3">
-          Thank you for shopping with MotoZoop! For any queries, contact support@motozoop.com
+          Thank you for shopping with MotoZoop! For any queries, contact
+          support@motozoop.com
         </div>
 
         {/* Download Button */}

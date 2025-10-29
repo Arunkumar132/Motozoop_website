@@ -5,15 +5,77 @@ import { backendClient } from "@/sanity/lib/backendClient";
 import crypto from "crypto";
 import { sendOrderConfirmation } from "@/lib/email";
 import { generateOrderId } from "@/components/orderid";
-import { urlFor } from "@/sanity/lib/image"; // if you want URLs for images
+import { urlFor } from "@/sanity/lib/image";
+
+// --- Types ---
+interface Color {
+  colorName?: string;
+  images?: unknown[];
+  stock?: number;
+}
+
+interface ProductDoc {
+  _id: string;
+  title?: string;
+  colors?: Color[];
+  price?: number;
+  discountedPrice?: number;
+}
+
+interface OrderItem {
+  product: { _id?: string; _ref?: string };
+  quantity?: number;
+  productName?: string;
+  discountedPrice?: number;
+  selectedColor?: string;
+}
+
+interface PaymentInfo {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature?: string;
+}
+
+interface Metadata {
+  orderNumber?: string;
+  customerName?: string;
+  customerEmail?: string;
+  clerkUserId?: string;
+  totalPrice?: number;
+  amountDiscount?: number;
+  invoiceId?: string;
+  address?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    mobile?: string;
+  };
+}
+
+interface ValidProduct {
+  _key: string;
+  product: { _type: "reference"; _ref: string };
+  quantity: number;
+  productName: string;
+  productImage: string | null;
+  discountedPrice: number;
+  selectedColor: string;
+}
 
 // --- Invoice ID Generator ---
-const generateInvoiceId = () =>
+const generateInvoiceId = (): string =>
   Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const { payment, metadata, items, totalPrice } = await req.json();
+    const { payment, metadata, items, totalPrice }: {
+      payment: PaymentInfo;
+      metadata: Metadata;
+      items: OrderItem[];
+      totalPrice?: number;
+    } = await req.json();
 
     // --- Validation ---
     if (!payment || !metadata || !Array.isArray(items) || items.length === 0) {
@@ -27,33 +89,28 @@ export async function POST(req: NextRequest) {
 
     // --- Prepare products for Sanity ---
     const sanityProducts = await Promise.all(
-      items.map(async (item: any) => {
+      items.map(async (item): Promise<ValidProduct | null> => {
         try {
           const productId = item.product?._id || item.product?._ref;
           if (!productId) return null;
 
-          // Fetch the full product from Sanity
-          const productDoc = await backendClient.fetch(
+          const productDoc = await backendClient.fetch<ProductDoc>(
             `*[_type == "product" && _id == $id][0]{ _id, title, colors[]{colorName, images, stock}, price, discountedPrice }`,
             { id: productId }
           );
-
           if (!productDoc) return null;
 
-          // Find the color object (normalize names)
           const colorObj = Array.isArray(productDoc.colors)
             ? productDoc.colors.find(
-                (c: any) =>
+                (c) =>
                   c.colorName?.trim().toLowerCase() ===
                   item.selectedColor?.trim().toLowerCase()
               )
             : null;
 
-          // Get first image (Sanity image object)
           const firstImage =
-            colorObj?.images?.[0] ?? productDoc?.colors?.[0]?.images?.[0] ?? null;
+            colorObj?.images?.[0] ?? productDoc.colors?.[0]?.images?.[0] ?? null;
 
-          // Use URL if needed
           const productImage = firstImage ? urlFor(firstImage).url() : null;
 
           return {
@@ -63,7 +120,7 @@ export async function POST(req: NextRequest) {
             productName: item.productName ?? productDoc.title ?? "",
             productImage,
             discountedPrice:
-              item.discountedPrice ?? 
+              item.discountedPrice ??
               productDoc.discountedPrice ??
               productDoc.price ??
               0,
@@ -76,8 +133,9 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // Filter out any nulls
-    const validProducts = sanityProducts.filter((p) => p !== null);
+    const validProducts = sanityProducts.filter(
+      (p): p is ValidProduct => p !== null
+    );
 
     if (validProducts.length === 0) {
       return NextResponse.json(
@@ -128,7 +186,7 @@ export async function POST(req: NextRequest) {
 
     // --- Send confirmation email ---
     try {
-      await sendOrderConfirmation(metadata.customerEmail, {
+      await sendOrderConfirmation(metadata.customerEmail ?? "", {
         id: existingOrderId,
         total: orderTotalPrice,
         items: validProducts.map((item) => ({
@@ -137,18 +195,19 @@ export async function POST(req: NextRequest) {
         })),
       });
       console.log("📧 Order confirmation email sent.");
-    } catch (err: any) {
-      console.error("❌ Email send failed:", err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("❌ Email send failed:", message);
     }
 
     // --- Update stock for selected color ---
     await Promise.all(
-      items.map(async (item: any) => {
+      items.map(async (item): Promise<void> => {
         try {
           const productId = item.product?._id || item.product?._ref;
           if (!productId) return;
 
-          const productDoc = await backendClient.fetch(
+          const productDoc = await backendClient.fetch<ProductDoc>(
             `*[_type == "product" && _id == $id][0]{_id, title, colors}`,
             { id: productId }
           );
@@ -156,7 +215,7 @@ export async function POST(req: NextRequest) {
           if (!productDoc || !Array.isArray(productDoc.colors)) return;
 
           const colorIndex = productDoc.colors.findIndex(
-            (c: any) =>
+            (c) =>
               c.colorName?.trim().toLowerCase() ===
               item.selectedColor?.trim().toLowerCase()
           );
@@ -180,7 +239,7 @@ export async function POST(req: NextRequest) {
     );
 
     // --- Get total orders count for user ---
-    const ordersCount = await backendClient.fetch(
+    const ordersCount = await backendClient.fetch<number>(
       `count(*[_type == "order" && clerkUserId == $userId])`,
       { userId: metadata.clerkUserId }
     );
@@ -190,10 +249,11 @@ export async function POST(req: NextRequest) {
       orderId: existingOrderId,
       ordersCount,
     });
-  } catch (err: any) {
-    console.error("❌ Failed to create order:", err);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("❌ Failed to create order:", message);
     return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
+      { error: message || "Internal Server Error" },
       { status: 500 }
     );
   }

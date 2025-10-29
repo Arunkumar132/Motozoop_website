@@ -1,7 +1,7 @@
 "use client";
 
 import { Category, Product } from "@/sanity.types";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Container from "./Container";
 import { Title } from "./Title";
 import { useSearchParams } from "next/navigation";
@@ -31,7 +31,8 @@ const Shop = ({ categories }: Props) => {
     new Set()
   );
 
-  const fetchProducts = async () => {
+  // ✅ Memoized function to fetch products
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       let minPrice = 0;
@@ -81,16 +82,18 @@ const Shop = ({ categories }: Props) => {
 
       setProducts(data);
     } catch (error) {
-      console.log("Shop product fetching Error", error);
+      console.error("Shop product fetching Error:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, selectedPrice]); // ✅ Dependencies
 
+  // ✅ Fetch products whenever filters change
   useEffect(() => {
     fetchProducts();
-  }, [selectedCategory, selectedPrice]);
+  }, [fetchProducts]);
 
+  // ✅ Handle main category click
   const handleMainCategoryClick = (categorySlug: string) => {
     const newExpanded = new Set<string>();
     if (!expandedCategories.has(categorySlug)) {
@@ -102,6 +105,7 @@ const Shop = ({ categories }: Props) => {
     );
   };
 
+  // ✅ Handle subcategory click
   const handleSubCategoryClick = (
     subCategoryTitle: string,
     e: React.MouseEvent
@@ -114,7 +118,7 @@ const Shop = ({ categories }: Props) => {
 
   return (
     <div className="border-t bg-white min-h-screen">
-      <Container className="mt-4 sm:mt-6 pb-20"> {/* Added padding-bottom for footer space */}
+      <Container className="mt-4 sm:mt-6 pb-20">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-white py-3 sm:py-4 mb-4 sm:mb-5 border-b border-gray-200 flex items-center justify-between px-2">
           <Title className="text-base sm:text-lg font-semibold uppercase tracking-wide text-gray-800">
@@ -188,7 +192,7 @@ const Shop = ({ categories }: Props) => {
               </div>
             </div>
 
-            {/* Price */}
+            {/* Price Filter */}
             <div>
               <h3 className="text-sm sm:text-base font-semibold text-black mb-3">
                 Price

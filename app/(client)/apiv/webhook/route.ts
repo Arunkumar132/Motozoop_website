@@ -9,6 +9,39 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || "",
 });
 
+// ---- TYPES ---- //
+interface RazorpayPayment {
+  id: string;
+  order_id: string;
+  signature?: string;
+  amount: number;
+  currency: string;
+}
+
+interface LineItem {
+  productId: string;
+  quantity: number;
+}
+
+interface Address {
+  state: string;
+  zip: string;
+  city: string;
+  address: string;
+  name: string;
+}
+
+interface Notes {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  phoneNumber: string;
+  clerkUserId: string;
+  address?: string;
+  lineItems: LineItem[];
+}
+
+// ---- MAIN WEBHOOK HANDLER ---- //
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
@@ -20,8 +53,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid webhook request" }, { status: 400 });
     }
 
-    // Verify Razorpay webhook signature
-    const expectedSignature = crypto.createHmac("sha256", webhookSecret).update(body, "utf8").digest("hex");
+    const expectedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(body, "utf8")
+      .digest("hex");
+
     if (signature !== expectedSignature) {
       console.error("Webhook signature mismatch");
       return NextResponse.json({ error: "Signature mismatch" }, { status: 400 });
@@ -31,13 +67,19 @@ export async function POST(req: NextRequest) {
     console.log("Webhook event received:", event.event);
 
     if (event.event === "payment.captured") {
-      const payment = event.payload.payment.entity;
+      const payment: RazorpayPayment = event.payload.payment.entity;
       const razorpayOrder = await razorpay.orders.fetch(payment.order_id);
-      const notes = razorpayOrder.notes || {};
+      const notes: Notes = razorpayOrder.notes as Notes;
       console.log("Razorpay notes:", notes);
 
-      // Validate required fields
-      const requiredFields = ["orderNumber", "customerName", "customerEmail", "phoneNumber", "clerkUserId", "lineItems"];
+      const requiredFields: (keyof Notes)[] = [
+        "orderNumber",
+        "customerName",
+        "customerEmail",
+        "phoneNumber",
+        "clerkUserId",
+        "lineItems",
+      ];
       for (const field of requiredFields) {
         if (!notes[field]) {
           console.error(`Missing required field in notes: ${field}`);
@@ -55,36 +97,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Function to create order in Sanity
-async function createOrderInSanity(payment: any, notes: any) {
+// ---- CREATE ORDER ---- //
+async function createOrderInSanity(payment: RazorpayPayment, notes: Notes) {
   try {
-    const {
-      orderNumber,
-      customerName,
-      customerEmail,
-      phoneNumber,
-      clerkUserId,
-      address,
-      lineItems,
-    } = notes;
+    const { orderNumber, customerName, customerEmail, phoneNumber, clerkUserId, address, lineItems } = notes;
 
-    const parsedAddress = address ? JSON.parse(address) : null;
+    const parsedAddress: Address | null = address ? JSON.parse(address) : null;
 
-    const sanityProducts: any[] = [];
-    const stockUpdates: { productId: string; quantity: number }[] = [];
+    const sanityProducts = lineItems.map((item) => ({
+      _key: crypto.randomUUID(),
+      _type: "orderProduct",
+      product: { _type: "reference", _ref: item.productId },
+      quantity: item.quantity || 0,
+    }));
 
-    (lineItems || []).forEach((item: any) => {
-      if (!item.productId) return;
-
-      sanityProducts.push({
-        _key: crypto.randomUUID(),
-        _type: "orderProduct",
-        product: { _type: "reference", _ref: item.productId },
-        quantity: item.quantity || 0,
-      });
-
-      stockUpdates.push({ productId: item.productId, quantity: item.quantity || 0 });
-    });
+    const stockUpdates = lineItems.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity || 0,
+    }));
 
     console.log("Creating order in Sanity:", {
       orderNumber,
@@ -129,7 +159,7 @@ async function createOrderInSanity(payment: any, notes: any) {
   }
 }
 
-// Function to update stock
+// ---- UPDATE STOCK ---- //
 async function updateStockLevels(stockUpdates: { productId: string; quantity: number }[]) {
   for (const { productId, quantity } of stockUpdates) {
     try {

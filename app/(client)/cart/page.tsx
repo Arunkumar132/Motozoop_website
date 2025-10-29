@@ -43,15 +43,64 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateOrderId } from "@/components/orderid";
 
-const CartPage = () => {
-  const {
-    deleteCartProduct,
-    resetCart,
-    getGroupedItems,
-    updateCartQuantity
-  } = useStore();
+// ---------- Types ----------
+interface CartColor {
+  colorName: string;
+  stock?: number;
+  images?: { asset?: unknown }[];
+}
 
-  const groupedItems = getGroupedItems();
+interface Product {
+  _id: string;
+  name: string;
+  slug?: { current: string };
+  price?: number;
+  discount?: number;
+  discountedPrice?: number;
+  colors?: CartColor[];
+  stock?: number;
+  varient?: string;
+  status?: string;
+  images?: { asset?: unknown }[];
+}
+
+interface CartItem {
+  product: Product;
+  selectedColor?: string;
+  selectedStatue?: string;
+  quantity: number;
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+  };
+  theme: { color: string };
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+    confirm_close: boolean;
+  };
+}
+
+// ---------- Component ----------
+const CartPage = () => {
+  const { deleteCartProduct, resetCart, getGroupedItems, updateCartQuantity } = useStore();
+
+  const groupedItems: CartItem[] = getGroupedItems();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const currentUserId = user?.id;
@@ -70,11 +119,11 @@ const CartPage = () => {
     zip: "",
   });
 
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const hasItems = Array.isArray(groupedItems) && groupedItems.length > 0;
 
   // Fetch addresses
-  const fetchAddresses = async () => {
+  const fetchAddresses = async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await fetch("/api/address");
@@ -91,9 +140,10 @@ const CartPage = () => {
       const defaultAddress = data.find((addr) => addr.default);
       if (defaultAddress) setSelectedAddress(defaultAddress);
       else if (data.length > 0) setSelectedAddress(data[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching addresses:", error);
-      toast.error(error.message || "Failed to fetch addresses");
+      const errMsg = error instanceof Error ? error.message : "Failed to fetch addresses";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -105,7 +155,7 @@ const CartPage = () => {
 
   // Initialize quantities
   useEffect(() => {
-    const q: { [key: string]: number } = {};
+    const q: Record<string, number> = {};
     groupedItems.forEach((item) => {
       const key = `${item.product?._id}-${item.selectedColor}-${item.selectedStatue}`;
       q[key] = item.quantity || 1;
@@ -113,7 +163,7 @@ const CartPage = () => {
     setQuantities(q);
   }, [groupedItems]);
 
-  const handleQuantityChange = (key: string, newQty: number, item: any) => {
+  const handleQuantityChange = (key: string, newQty: number, item: CartItem): void => {
     setQuantities((prev) => ({ ...prev, [key]: newQty }));
     updateCartQuantity(item.product._id, newQty, {
       selectedColor: item.selectedColor,
@@ -121,7 +171,7 @@ const CartPage = () => {
     });
   };
 
-  const handleResetCart = () => {
+  const handleResetCart = (): void => {
     if (window.confirm("Are you sure you want to reset the cart?")) {
       resetCart();
       toast.success("Cart has been reset");
@@ -147,11 +197,11 @@ const CartPage = () => {
   const DELIVERY_CHARGE = 75;
   const totalPrice = total - amountDiscount + DELIVERY_CHARGE;
 
-  // Razorpay script
+  // Razorpay script loader
   const loadRazorpayScript = (): Promise<void> =>
     new Promise((resolve, reject) => {
       if (typeof window === "undefined") return reject(new Error("window is undefined"));
-      if ((window as any).Razorpay) return resolve();
+      if ((window as Window & { Razorpay?: unknown }).Razorpay) return resolve();
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
@@ -160,12 +210,12 @@ const CartPage = () => {
       document.body.appendChild(script);
     });
 
-  const handleCheckout = async () => {
+  // Checkout
+  const handleCheckout = async (): Promise<void> => {
     if (!user) {
       toast.error("Please login to continue");
       return;
     }
-
     if (!selectedAddress) {
       toast.error("Please select a shipping address");
       return;
@@ -174,7 +224,7 @@ const CartPage = () => {
     setLoading(true);
     let paymentHandled = false;
 
-    const metadata: any = {
+    const metadata = {
       orderNumber: generateOrderId(),
       customerName: user.fullName ?? "Unknown",
       customerEmail: user.emailAddresses?.[0]?.emailAddress ?? "Unknown",
@@ -199,20 +249,16 @@ const CartPage = () => {
       return;
     }
 
-    let orderData: any;
+    let orderData: { orderId: string; amount: number; currency?: string } | null = null;
     try {
       const res = await fetch("/api/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: groupedItems,
-          metadata,
-          amount: totalPrice,
-        }),
+        body: JSON.stringify({ items: groupedItems, metadata, amount: totalPrice }),
       });
       orderData = await res.json();
-      if (!res.ok || !orderData.orderId) {
-        toast.error(orderData.error || "Failed to create payment order.");
+      if (!res.ok || !orderData?.orderId) {
+        toast.error(orderData ? "Failed to create payment order." : "Server error.");
         setLoading(false);
         return;
       }
@@ -222,7 +268,7 @@ const CartPage = () => {
       return;
     }
 
-    const options: any = {
+    const options: RazorpayOptions = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: orderData.amount,
       currency: orderData.currency ?? "INR",
@@ -234,7 +280,7 @@ const CartPage = () => {
         email: metadata.customerEmail,
       },
       theme: { color: "#3399cc" },
-      handler: async (response: any) => {
+      handler: async (response: RazorpayResponse) => {
         if (paymentHandled) return;
         paymentHandled = true;
         try {
@@ -301,8 +347,14 @@ const CartPage = () => {
     };
 
     try {
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", (resp: any) => {
+      interface RazorpayInstance {
+        open: () => void;
+        on: (event: string, callback: (response: unknown) => void) => void;
+      }
+
+      const rzp = new (window as unknown as { Razorpay: new (opt: RazorpayOptions) => RazorpayInstance }).Razorpay(options);
+
+      rzp.on("payment.failed", (resp: { error?: { description?: string } }) => {
         if (paymentHandled) return;
         paymentHandled = true;
         const errMsg = resp?.error?.description || "Payment failed";
@@ -316,7 +368,7 @@ const CartPage = () => {
     }
   };
 
-  const addAddressToSanity = async (addressData: any) => {
+  const addAddressToSanity = async (addressData: typeof newAddress): Promise<void> => {
     try {
       setLoading(true);
       const res = await fetch("/api/address", {
@@ -332,15 +384,16 @@ const CartPage = () => {
       setAddresses((prev) => (prev ? [result.address, ...prev] : [result.address]));
       setSelectedAddress(result.address);
       toast.success("Address added successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.message || "Failed to add address");
+      const errMsg = error instanceof Error ? error.message : "Failed to add address";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteAddressFromSanity = async (id: string) => {
+  const deleteAddressFromSanity = async (id: string): Promise<void> => {
     try {
       setLoading(true);
       const res = await fetch("/api/address", {
@@ -360,16 +413,17 @@ const CartPage = () => {
       } else {
         throw new Error(result.error || "Failed to delete address");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.message || "Failed to delete address");
+      const errMsg = error instanceof Error ? error.message : "Failed to delete address";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------- RENDER ----------
   if (!isSignedIn) return <NoAccessToCart />;
-
   if (!hasItems) return <EmptyCart />;
 
   return (
@@ -389,7 +443,7 @@ const CartPage = () => {
                 if (!product) return null;
 
                 const colorToShow = item.selectedColor
-                  ? product.colors?.find((c: any) => c.colorName === item.selectedColor)
+                  ? product.colors?.find((c: CartColor) => c.colorName === item.selectedColor)
                   : product.colors?.[0];
 
                 const imageToShow = colorToShow?.images?.[0];
@@ -489,7 +543,7 @@ const CartPage = () => {
                           onClick={() => handleQuantityChange(key, quantity + 1, item)}
                           disabled={(() => {
                             const colorVariant = product.colors?.find(
-                              (c: any) => c.colorName === item.selectedColor
+                              (c: CartColor) => c.colorName === item.selectedColor
                             );
                             const availableStock = colorVariant?.stock ?? product.stock ?? Infinity;
                             return quantity >= availableStock;

@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Container from "@/components/Container";
 import { Mail, Phone, MapPin } from "lucide-react";
 
-const ContactPage = () => {
+const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,7 +22,7 @@ const ContactPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -33,15 +33,21 @@ const ContactPage = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const data: { error?: string } = await res.json();
 
       if (!res.ok) throw new Error(data.error || "Something went wrong");
 
       toast.success("Message sent successfully!");
       setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch (error: any) {
-      console.error("Error:", error);
-      toast.error(error.message || "Network error. Please try again.");
+    } catch (error: unknown) {
+      // ✅ type-safe error handling
+      if (error instanceof Error) {
+        console.error("Error:", error.message);
+        toast.error(error.message || "Network error. Please try again.");
+      } else {
+        console.error("Unknown error:", error);
+        toast.error("Network error. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -49,7 +55,6 @@ const ContactPage = () => {
 
   return (
     <Container>
-      {/* Toast notifications */}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}
@@ -60,7 +65,7 @@ const ContactPage = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark" // dark background with white text
+        theme="dark"
       />
 
       {/* Hero Section */}
@@ -154,12 +159,12 @@ const ContactPage = () => {
                     r="10"
                     stroke="currentColor"
                     strokeWidth="4"
-                  ></circle>
+                  />
                   <path
                     className="opacity-75"
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
+                  />
                 </svg>
               ) : null}
               {loading ? "Sending..." : "Send Message"}

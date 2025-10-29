@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-hot-toast";
 
@@ -19,7 +19,7 @@ export default function FetchAddresses() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const getAddresses = async () => {
+  const getAddresses = useCallback(async () => {
     if (!currentUserId) return;
     setLoading(true);
 
@@ -33,11 +33,11 @@ export default function FetchAddresses() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
 
   useEffect(() => {
     getAddresses();
-  }, [currentUserId]);
+  }, [getAddresses]);
 
   return (
     <div>

@@ -2,7 +2,11 @@
 import React from "react";
 import Container from "@/components/Container";
 import { urlFor } from "@/sanity/lib/image";
-import { getBlogCategories, getOthersBlog, getSingleBlog } from "@/sanity/queries";
+import {
+  getBlogCategories,
+  getOthersBlog,
+  getSingleBlog,
+} from "@/sanity/queries";
 import dayjs from "dayjs";
 import { Calendar, ChevronLeftIcon, Pencil } from "lucide-react";
 import Image from "next/image";
@@ -11,13 +15,14 @@ import { PortableText } from "next-sanity";
 import Link from "next/link";
 import { Blog, BlogCategory } from "@/sanity.types";
 
+// ✅ Correct type: params is a plain object (not a Promise)
 interface PageProps {
   params: { slug: string };
 }
 
-// Main Blog Page - Server Component
+// ✅ Main Blog Page - Server Component
 export default async function SingleBlogPage({ params }: PageProps) {
-  const { slug } = params;
+  const { slug } = params; // ✅ No need to await anything
 
   const blog: Blog | null = await getSingleBlog(slug);
   if (!blog) return notFound();
@@ -25,7 +30,7 @@ export default async function SingleBlogPage({ params }: PageProps) {
   return (
     <div className="py-10">
       <Container className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        {/* Main Blog Content */}
+        {/* ✅ Main Blog Content */}
         <div className="lg:col-span-3">
           {blog.mainImage && (
             <Image
@@ -38,9 +43,9 @@ export default async function SingleBlogPage({ params }: PageProps) {
             />
           )}
 
-          {/* Blog Meta */}
-          <div className="text-xs flex items-center gap-5 my-7">
-            <div className="flex items-center gap-2">
+          {/* ✅ Blog Meta Section */}
+          <div className="text-xs flex flex-wrap items-center gap-5 my-7">
+            <div className="flex flex-wrap items-center gap-2">
               {blog.blogcategories?.map((item: BlogCategory, idx: number) => (
                 <p
                   key={idx}
@@ -62,11 +67,11 @@ export default async function SingleBlogPage({ params }: PageProps) {
             </p>
           </div>
 
-          {/* Blog Content */}
+          {/* ✅ Blog Content */}
           <h2 className="text-3xl font-bold mb-5">{blog.title}</h2>
           {blog.body && <PortableText value={blog.body} />}
 
-          {/* Back to Blogs */}
+          {/* ✅ Back to Blogs */}
           <div className="mt-10">
             <Link href="/blog" className="flex items-center gap-1">
               <ChevronLeftIcon className="size-5" />
@@ -75,22 +80,39 @@ export default async function SingleBlogPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* ✅ Sidebar Section */}
         <BlogSidebar slug={slug} />
       </Container>
     </div>
   );
 }
 
-// Sidebar - Server Component
+// ✅ Sidebar - Server Component
 async function BlogSidebar({ slug }: { slug: string }) {
   const categories: BlogCategory[] = await getBlogCategories();
   const latestBlogs: Blog[] = await getOthersBlog(slug, 5);
 
   return (
-    <div>
-      {/* Latest Blogs */}
-      <div className="border border-lightColor p-5 rounded-md mt-10">
+    <div className="space-y-8">
+      {/* ✅ Blog Categories Section */}
+      <div className="border border-lightColor p-5 rounded-md">
+        <p className="text-xl font-semibold text-shop_dark_green">Categories</p>
+        <ul className="mt-4 space-y-2">
+          {categories?.map((cat: BlogCategory) => (
+            <li key={cat._id}>
+              <Link
+                href={`/blog/category/${cat.slug?.current}`}
+                className="text-sm text-lightColor hover:text-shop_dark_green transition-colors"
+              >
+                {cat.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* ✅ Latest Blogs Section */}
+      <div className="border border-lightColor p-5 rounded-md">
         <p className="text-xl font-semibold text-shop_dark_green">Latest Blogs</p>
         <div className="space-y-4 mt-4">
           {latestBlogs?.map((blog: Blog, idx: number) => (
@@ -105,10 +127,10 @@ async function BlogSidebar({ slug }: { slug: string }) {
                   alt={blog.title || ""}
                   width={100}
                   height={100}
-                  className="w-16 h-16 object-cover rounded-full border-[1px] border-shop_dark_green/10 group-hover:border-shop_dark_green"
+                  className="w-16 h-16 object-cover rounded-full border-[1px] border-shop_dark_green/10 group-hover:border-shop_dark_green transition"
                 />
               )}
-              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green">
+              <p className="line-clamp-2 text-sm text-lightColor group-hover:text-shop_dark_green transition">
                 {blog.title}
               </p>
             </Link>

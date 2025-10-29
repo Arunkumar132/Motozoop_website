@@ -1,6 +1,41 @@
 "use client";
 import React from "react";
 
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string | undefined;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  notes: {
+    address: string;
+  };
+  theme: {
+    color: string;
+  };
+}
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => {
+      open: () => void;
+    };
+  }
+}
+
 export default function CheckoutPage() {
   const handlePayment = async () => {
     try {
@@ -20,15 +55,15 @@ export default function CheckoutPage() {
         return;
       }
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // public key
+      const options: RazorpayOptions = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: 500 * 100,
         currency: "INR",
         name: "Motozoop",
         description: "Test Transaction",
         order_id: data.orderId,
-        handler: function (response: any) {
-          alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+        handler: function (response) {
+          alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
         },
         prefill: {
           name: "Arunkumar M",
@@ -43,7 +78,7 @@ export default function CheckoutPage() {
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
+      const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
       console.error("Payment failed:", error);
