@@ -1,4 +1,3 @@
-// .eslintrc.mjs
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
@@ -11,10 +10,8 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  // Extend Next.js recommended rules via FlatCompat
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 
-  // Project-specific overrides
   {
     ignores: [
       "node_modules/**",
@@ -24,17 +21,14 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
     rules: {
-      // Allow "any" but only warn instead of disabling completely
-      "@typescript-eslint/no-explicit-any": "warn",
-
-      // React Hooks rules
+      "@typescript-eslint/no-explicit-any": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-
-      // Optional: relax some stylistic rules
       "react/jsx-props-no-spreading": "off",
       "react/react-in-jsx-scope": "off",
       "import/no-anonymous-default-export": "off",
+      "no-console": "off", // Added
+      "no-unused-vars": "warn", // Added
     },
   },
 ];

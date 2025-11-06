@@ -1,15 +1,15 @@
 import Shop from "@/components/Shop";
 import { getCategories } from "@/sanity/queries";
-import React from "react";
+import { Suspense } from "react";
 
-const ShopPage = async () => {
+export default async function ShopPage() {
   const categories = await getCategories();
 
   return (
     <main>
-      <Shop categories={categories} />
+      <Suspense fallback={<div className="text-center py-10">Loading shop...</div>}>
+        <Shop categories={categories} />
+      </Suspense>
     </main>
   );
-};
-
-export default ShopPage;
+}

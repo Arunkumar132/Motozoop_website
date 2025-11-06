@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import useStore from "@/store";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,17 +14,15 @@ interface Order {
   orderNumber: string;
 }
 
-export default function SuccessPage() {
+function SuccessPageContent() {
   const { resetCart } = useStore();
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
-
   const [order, setOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (orderNumber) {
       resetCart();
-
       const fetchOrder = async () => {
         try {
           const query = `*[_type == "order" && orderNumber == $orderNumber][0]{ orderNumber }`;
@@ -33,14 +32,12 @@ export default function SuccessPage() {
           console.error("Error fetching order:", err);
         }
       };
-
       fetchOrder();
     }
   }, [orderNumber, resetCart]);
 
   return (
     <div className="pt-10 pb-2 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col items-center">
-      {/* Logo */}
       <div className="text-center mb-6">
         <Image
           src="/Untitled_design-removebg-preview.png"
@@ -52,7 +49,6 @@ export default function SuccessPage() {
         />
       </div>
 
-      {/* Success Icon */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -78,7 +74,6 @@ export default function SuccessPage() {
         Order Number: {order?.orderNumber || orderNumber}
       </p>
 
-      {/* Action Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-md px-4 sm:px-0">
         <Link
           href="/"
@@ -105,5 +100,13 @@ export default function SuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuccessPageContent />
+    </Suspense>
   );
 }

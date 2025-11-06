@@ -1,12 +1,12 @@
-import nodemailer from "nodemailer";
-import path from "path";
-import { sendOrderConfirmation as sendEmailOriginal } from "./sendOrderConfirmation"; // adjust path if needed
+const nodemailer = require("nodemailer");
+const path = require("path");
 
+// Main test function
 async function testOrderEmail() {
   // 1. Create Ethereal test account
   const testAccount = await nodemailer.createTestAccount();
 
-  // 2. Create a transporter using Ethereal
+  // 2. Create transporter using Ethereal
   const transporter = nodemailer.createTransport({
     host: "smtp.ethereal.email",
     port: 587,
@@ -26,16 +26,10 @@ async function testOrderEmail() {
     ],
   };
 
-  // 4. Call your original function, but pass the Ethereal transporter
-  await sendEmailOriginalWithTransporter(transporter, "customer@example.com", orderDetails);
-}
-
-// 5. Wrapper function to inject the transporter
-async function sendEmailOriginalWithTransporter(transporter: nodemailer.Transporter, email: string, orderDetails: any) {
-  // This is basically your original function, but using the provided transporter
+  // 4. Generate items table HTML
   const itemsHtml = orderDetails.items
     .map(
-      (item: any) => `
+      (item) => `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">${item.name}</td>
         <td style="text-align: center; padding: 8px; border-bottom: 1px solid #f3f4f6;">${item.quantity}</td>
@@ -45,12 +39,14 @@ async function sendEmailOriginalWithTransporter(transporter: nodemailer.Transpor
     )
     .join("");
 
+  // 5. Mail options
   const mailOptions = {
     from: '"MOTOZOOP" <no-reply@motozoop.com>',
-    to: email,
+    to: "customer@example.com",
     subject: `MOTOZOOP Order Confirmation - #${orderDetails.id}`,
     html: `
-      <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333; border: 1px solid #e0e0e0; border-radius: 8px;">
+        
         <div style="text-align: center; margin-bottom: 20px;">
           <img src="cid:companylogo" alt="MOTOZOOP Logo" style="max-width: 100%; width: 150px; display: inline-block;" />
         </div>
@@ -93,15 +89,17 @@ async function sendEmailOriginalWithTransporter(transporter: nodemailer.Transpor
     attachments: [
       {
         filename: "logo.png",
-        path: path.join(process.cwd(), "public/Untitled_design-removebg-preview.png"),
+        path: path.join(__dirname, "public/Untitled_design-removebg-preview.png"), // make sure logo exists
         cid: "companylogo",
       },
     ],
   };
 
+  // 6. Send email
   const info = await transporter.sendMail(mailOptions);
   console.log("Test email sent!");
   console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
 }
 
+// Run the test
 testOrderEmail();
