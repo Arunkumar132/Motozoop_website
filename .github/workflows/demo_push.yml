@@ -1,0 +1,12 @@
+name: demo_push
+
+on:
+  push: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Build
+        run: echo "Pipeline triggered successfully"
